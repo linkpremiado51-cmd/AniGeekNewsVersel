@@ -1,14 +1,20 @@
 /**
  * ARQUIVO: modulos/modulos_analises/analises_interface.js
- * PAPEL: Renderização Visual das Análises
- * VERSÃO: 4.3 - INTEGRADO COM BUSCA (FEEDBACK DE RESULTADOS)
+ * PAPEL: Renderização Visual das Análises (Com ativação de Comentários e Logs)
+ * VERSÃO: 5.0 - INTEGRADO AO MÓDULO GLOBAL DE COMENTÁRIOS
  */
 
 import { limparEspacos } from './analises_funcoes.js';
 
+/**
+ * Sistema de Log Visual de Emergência
+ * Se a função window.logVisual não existir, ele cria uma temporária para não travar o código
+ */
 function logInterface(msg) {
     if (typeof window.logVisual === 'function') {
-        window.logVisual(msg);
+        window.logVisual(`[Interface] ${msg}`);
+    } else {
+        console.log(`[Interface Log] ${msg}`);
     }
 }
 
@@ -38,7 +44,6 @@ function criarRelacionadosHtml(newsId, relacionados) {
     `).join('');
 }
 
-// ALTERADO: Adicionado controle de visibilidade baseado em resultados
 export function renderizarBotaoPaginacao(mostrar = true) {
     const paginationWrapper = document.getElementById('novo-pagination-modulo');
     if (!paginationWrapper) return;
@@ -66,7 +71,6 @@ export function renderizarNoticias(noticias, limite, termoBusca = "") {
 
     const listaParaExibir = noticias.slice(0, limite);
 
-    // LÓGICA DE BUSCA: Caso não encontre nada
     if (termoBusca && listaParaExibir.length === 0) {
         container.innerHTML = `
             <div style="text-align:center; padding:80px 20px; color:var(--text-muted);">
@@ -74,11 +78,10 @@ export function renderizarNoticias(noticias, limite, termoBusca = "") {
                 <h3 style="color:var(--text-main); margin-bottom:10px;">Nenhum resultado para "${termoBusca}"</h3>
                 <p>Tente termos mais genéricos ou verifique a ortografia.</p>
             </div>`;
-        renderizarBotaoPaginacao(false); // Oculta o botão se não há resultados
+        renderizarBotaoPaginacao(false);
         return;
     }
 
-    // Caso base: Se a lista geral estiver vazia (sem busca)
     if (listaParaExibir.length === 0) {
         container.innerHTML = `
             <div style="text-align:center; padding:80px 20px; opacity:0.6;">
@@ -99,7 +102,7 @@ export function renderizarNoticias(noticias, limite, termoBusca = "") {
         <article class="destaque-secao" id="artigo-${news.id}" style="--tema-cor: ${news.cor || '#8A2BE2'}">
           <div class="destaque-padding">
             <div class="destaque-top-meta">
-                <div class="destaque-categoria" onclick="if(window.analises) window.analises.abrirNoModalGlobal('${news.id}')">
+                <div class="destaque-categoria">
                     <i class="fa-solid fa-hashtag"></i> ${news.categoria || 'ANÁLISE'}
                 </div>
                 <div class="destaque-data-badge">
@@ -108,7 +111,7 @@ export function renderizarNoticias(noticias, limite, termoBusca = "") {
             </div>
             
             <div class="destaque-header">
-              <h2 class="destaque-titulo" onclick="if(window.analises) window.analises.abrirNoModalGlobal('${news.id}')">
+              <h2 class="destaque-titulo">
                 ${news.titulo}
               </h2>
             </div>
@@ -153,7 +156,8 @@ export function renderizarNoticias(noticias, limite, termoBusca = "") {
             </div>
           </div>
 
-          <div class="comments-trigger-bar">
+          <div class="comments-trigger-bar" style="cursor: pointer;" 
+               onclick="if(window.secaoComentarios) { window.secaoComentarios.abrir('${news.id}'); } else { alert('Erro: Módulo de comentários não carregado.'); }">
             <div class="trigger-left" style="display: flex; align-items: center; gap: 10px; color: var(--tema-cor); font-weight: 700; font-size: 0.85rem;">
               <i class="fa-solid fa-circle-nodes"></i>
               <span>Ver discussão da comunidade...</span>
@@ -166,7 +170,5 @@ export function renderizarNoticias(noticias, limite, termoBusca = "") {
       `;
     }).join('');
 
-    // Se houver mais notícias além do limite, mostra o botão. Se for busca com poucos resultados, oculta.
-    const totalDisponivel = noticias.length;
     renderizarBotaoPaginacao(totalDisponivel > limite);
 }

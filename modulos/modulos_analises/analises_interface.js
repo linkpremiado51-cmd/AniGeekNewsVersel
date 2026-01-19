@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: modulos/modulos_analises/analises_interface.js
  * PAPEL: Renderização Visual das Análises
- * VERSÃO: 4.1 - Otimizado para SPA e Delegação de Eventos
+ * VERSÃO: 4.2 - UX de Player e Otimização SPA
  */
 
 import { limparEspacos } from './analises_funcoes.js';
@@ -25,9 +25,12 @@ export function criarFichaHtml(ficha) {
 function criarRelacionadosHtml(newsId, relacionados) {
     if (!relacionados || !Array.isArray(relacionados)) return "";
     return relacionados.map(rel => `
-        <div class="tema-card" onclick="if(window.analises) window.analises.trocarVideo('player-${newsId}', '${rel.idVid}')">
+        <div class="tema-card" onclick="if(window.analises) { 
+            window.analises.trocarVideo('player-${newsId}', '${rel.idVid}');
+            document.getElementById('artigo-${newsId}').scrollIntoView({behavior: 'smooth', block: 'start'});
+        }">
             <div class="thumb-wrapper">
-                <img src="${limparEspacos(rel.thumb)}" class="tema-thumb" alt="${rel.titulo}">
+                <img src="${limparEspacos(rel.thumb)}" class="tema-thumb" alt="${rel.titulo}" loading="lazy">
                 <div class="play-overlay"><i class="fa-solid fa-play"></i></div>
             </div>
             <div class="tema-titulo">${rel.titulo}</div>
@@ -38,6 +41,9 @@ function criarRelacionadosHtml(newsId, relacionados) {
 export function renderizarBotaoPaginacao() {
     const paginationWrapper = document.getElementById('novo-pagination-modulo');
     if (!paginationWrapper) return;
+
+    // Evita renderizar o botão múltiplas vezes
+    if (paginationWrapper.querySelector('#btn-carregar-mais')) return;
 
     paginationWrapper.innerHTML = `
         <div style="text-align: center; padding: 20px 0 60px 0; width: 100%;">
@@ -100,7 +106,8 @@ export function renderizarNoticias(noticias, limite) {
                 id="player-${news.id}" 
                 src="${limparEspacos(news.videoPrincipal)}" 
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen>
+                allowfullscreen
+                loading="lazy">
             </iframe>
           </div>
 

@@ -1,6 +1,6 @@
 /* =========================================================
    HEADER — ANI GEEK NEWS | CORPORATE MEDIA STANDARD
-   Inspired by Bloomberg, IGN, NYTimes Tech
+   Inspired by Bloomberg, IGN, NYTimes Tech cabecalho-rodape.css
 ========================================================= */
 
 .sticky-header-group {
@@ -9,6 +9,11 @@
     z-index: 5000;
     background: var(--card-bg);
     border-bottom: 1px solid var(--border);
+}
+
+/* Ajuste para o Log Visual não colidir com o Header fixo */
+#log-visual-container {
+    top: calc(var(--header-h) + 10px) !important;
 }
 
 /* Header */

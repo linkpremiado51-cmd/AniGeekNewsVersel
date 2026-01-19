@@ -1,4 +1,8 @@
-/* scripts/modal-manager.js */
+/* ======================================================
+   scripts/modal-manager.js
+   PAPEL: Gerenciador Visual de Modal (Componente Passivo)
+   MUDANÇA: Desacoplamento de URL, SEO Global e Firebase.
+   ====================================================== */
 
 let noticiasDaSessao = []; 
 let indiceAtual = 0;
@@ -33,13 +37,10 @@ if (!document.getElementById('modal-noticia-global')) {
 }
 
 /**
- * Atualiza as Meta Tags para SEO dinamico e Título da Aba
+ * Atualiza apenas as Meta Tags para SEO dinâmico.
+ * O Título da aba é agora responsabilidade do orquestrador de navegação.
  */
 const atualizarSEO = (noticia) => {
-    // 1. Atualiza o título da aba do navegador
-    document.title = `${noticia.titulo} | AniGeekNews`;
-
-    // 2. Função auxiliar para atualizar ou criar meta tags
     const setMeta = (property, content) => {
         let el = document.querySelector(`meta[property="${property}"]`) || 
                  document.querySelector(`meta[name="${property}"]`);
@@ -51,7 +52,7 @@ const atualizarSEO = (noticia) => {
         el.setAttribute('content', content);
     };
 
-    // 3. Tags Open Graph (Facebook/Instagram/WhatsApp) e Twitter
+    // Tags Open Graph e Twitter
     setMeta('og:title', noticia.titulo);
     setMeta('og:description', noticia.resumo ? noticia.resumo.substring(0, 160) : "");
     setMeta('og:image', noticia.thumb);
@@ -60,7 +61,7 @@ const atualizarSEO = (noticia) => {
 };
 
 /**
- * Renderiza os dados no Modal
+ * Renderiza os dados no Modal sem manipular o histórico/URL.
  */
 const renderizarDadosNoModal = (noticia) => {
     if (!noticia) return;
@@ -74,7 +75,7 @@ const renderizarDadosNoModal = (noticia) => {
     document.getElementById('m-resumo').innerText = noticia.resumo || "";
     document.getElementById('m-link').href = noticia.linkArtigo || "#";
 
-    // O vídeo já vem formatado pelo config-firebase.js (normalizarNoticia)
+    // Define o src do vídeo
     document.getElementById('m-video').src = noticia.videoPrincipal;
 
     const fichaContainer = document.getElementById('m-ficha');
@@ -90,26 +91,30 @@ const renderizarDadosNoModal = (noticia) => {
         fichaContainer.style.display = 'none';
     }
     
-    // Atualiza a URL e o SEO
-    const url = new URL(window.location);
-    url.searchParams.set('id', noticia.id);
-    window.history.pushState({}, '', url);
-    
+    // Atualiza apenas os metadados
     atualizarSEO(noticia);
 };
 
+/**
+ * Abre o modal recebendo a notícia e, opcionalmente, a lista de contexto (Correção 2).
+ */
 window.abrirModalNoticia = (noticia) => {
     if (!noticia) return;
     const modal = document.getElementById('modal-noticia-global');
     
-    noticiasDaSessao = (window.noticiasFirebase || []).filter(n => n.origem === noticia.origem);
+    // Agora o modal usa a lista que o módulo ou busca enviar, ou apenas a própria notícia.
+    noticiasDaSessao = noticia.lista || [noticia];
     indiceAtual = noticiasDaSessao.findIndex(n => n.id === noticia.id);
+    if (indiceAtual === -1) indiceAtual = 0;
 
     renderizarDadosNoModal(noticia);
     modal.style.display = 'block';
     document.body.style.overflow = 'hidden';
 };
 
+/**
+ * Navega entre as notícias da lista injetada no modal.
+ */
 window.navegarNoticia = (direcao) => {
     const novoIndice = indiceAtual + direcao;
     if (novoIndice >= 0 && novoIndice < noticiasDaSessao.length) {
@@ -118,16 +123,13 @@ window.navegarNoticia = (direcao) => {
     }
 };
 
+/**
+ * Fecha o modal limpando apenas o estado visual.
+ */
 window.fecharModalGlobal = () => {
     const modal = document.getElementById('modal-noticia-global');
     modal.style.display = 'none';
     document.getElementById('m-video').src = "";
     document.body.style.overflow = 'auto';
-
-    // Restaura o título padrão do site
-    document.title = "AniGeekNews | Jornalismo Geek";
-
-    const url = new URL(window.location);
-    url.searchParams.delete('id');
-    window.history.pushState({}, '', url);
+    // O gerenciamento de URL de retorno agora é feito pelo orquestrador popstate ou navegacao.js
 };

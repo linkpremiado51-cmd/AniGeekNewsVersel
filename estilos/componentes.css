@@ -1,5 +1,6 @@
 /* ======================================================
-   SEARCH & FILTER BAR — ENTERPRISE MEDIA GRADE
+   SEARCH & FILTER BAR — ENTERPRISE MEDIA GRADE componentes.css
+   VERSÃO: 5.1 - Ajuste de Camadas para Logs e Modal
 ====================================================== */
 
 .search-bar-wrapper {
@@ -35,7 +36,7 @@
 
 /* Foco */
 .search-box:focus-within {
-    background: #fff;
+    background: var(--card-bg); /* Ajustado para usar variável */
     border-color: var(--primary);
 }
 
@@ -72,7 +73,7 @@
     max-height: 65vh;
     overflow-y: auto;
     display: none;
-    z-index: 6000;
+    z-index: 5500; /* Reduzido levemente para não cobrir o Modal de Comentários */
 }
 
 /* Linha */
@@ -138,7 +139,10 @@ body.dark-mode .result-item-list:hover {
     overflow-x: auto;
     border-bottom: 1px solid var(--border);
     background: var(--card-bg);
+    scrollbar-width: none; /* Esconde scrollbar no Firefox */
 }
+
+.filter-scroller::-webkit-scrollbar { display: none; } /* Esconde no Chrome/Safari */
 
 /* Tag */
 .filter-tag {

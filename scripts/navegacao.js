@@ -1,10 +1,9 @@
 /**
  * ARQUIVO: scripts/navegacao.js
  * PAPEL: Orquestrador de Infraestrutura (SPA) e Navegação via Modal
- * VERSÃO: 3.2 - Ajustado para Novo Index e Shell de Seções
+ * VERSÃO: 3.3 - Tratamento de Erros e Reset de Estado
  */
 
-// AJUSTE: Agora busca o container correto definido no seu index.html
 const displayPrincipal = document.getElementById('dynamic-content'); 
 let modalAberto = false; 
 
@@ -21,6 +20,11 @@ async function carregarSecao(nome) {
         return;
     }
 
+    // Garantia SPA: Fecha modais e libera scroll ao trocar de aba
+    if (typeof window.fecharModalNoticia === 'function') {
+        window.fecharModalNoticia();
+    }
+
     // Feedback visual de carregamento
     displayPrincipal.innerHTML = `
         <div style="text-align: center; padding: 120px; color: var(--text-muted); opacity: 0.5;">
@@ -29,8 +33,7 @@ async function carregarSecao(nome) {
         </div>`;
     
     try {
-        window.inicializarSecao = null; // Reseta o contrato para o próximo módulo
-        gerenciarCSSDoModulo(nome);
+        window.inicializarSecao = null; 
 
         // 1. Busca o Shell HTML da seção
         const response = await fetch(`./secoes/${nome}.html`);
@@ -39,67 +42,75 @@ async function carregarSecao(nome) {
         const htmlBase = await response.text();
         displayPrincipal.innerHTML = htmlBase;
 
-        // 2. Remove script anterior para evitar duplicidade
+        // 2. Limpeza de Scripts de Módulo Anteriores
         const scriptId = `script-modulo-ativo`;
-        document.getElementById(scriptId)?.remove(); 
+        const antigo = document.getElementById(scriptId);
+        if (antigo) antigo.remove();
 
-        // 3. Cria e injeta o novo script do módulo
+        // 3. Injeção do Módulo JS com mapeamento de caminhos
         const novoScript = document.createElement("script");
         novoScript.id = scriptId;
         novoScript.type = "module";
-        // Caminho padrão conforme sua árvore de pastas
-        novoScript.src = `./modulos/modulos_${nome}/${nome}_principal.js?v=${Date.now()}`;
+        
+        // Mapeamento dinâmico: Se for analises, usa a pasta modulos_analises, senão usa o padrão
+        const pastaModulo = (nome === 'analises') ? `modulos_${nome}` : nome;
+        novoScript.src = `./modulos/${pastaModulo}/${nome}_principal.js?v=${Date.now()}`;
         
         novoScript.onload = () => {
-            // Verifica se o módulo exportou a função de inicialização
             if (typeof window.inicializarSecao === 'function') {
-                // Procura o data-root dentro do HTML recém injetado
                 const root = displayPrincipal.querySelector(`[data-root="${nome}"]`) || displayPrincipal;
                 window.inicializarSecao(root, { modo: 'lista', origem: nome });
-                console.log(`✅ Módulo ${nome} iniciado com sucesso.`);
-            } else {
-                console.warn(`⚠️ Módulo ${nome} carregado, mas window.inicializarSecao não foi definida.`);
+                console.log(`✅ Módulo ${nome} iniciado.`);
             }
+        };
+
+        novoScript.onerror = () => {
+            console.error(`Falha ao carregar o script em: ${novoScript.src}`);
+            throw new Error(`Script do módulo ${nome} não encontrado.`);
         };
 
         document.body.appendChild(novoScript);
         scrollTopo();
 
     } catch (err) {
-        console.error(`❌ Erro ao orquestrar seção ${nome}:`, err);
+        console.error(`❌ Erro SPA:`, err);
         displayPrincipal.innerHTML = `
-            <div style="text-align:center; padding:100px; color: #ff4444;">
-                <i class="fa-solid fa-triangle-exclamation" style="font-size: 30px;"></i><br>
-                Módulo <strong>${nome}</strong> temporariamente indisponível.
+            <div style="text-align:center; padding:100px; color: var(--text-main);">
+                <i class="fa-solid fa-ghost" style="font-size: 40px; margin-bottom:15px; opacity:0.3;"></i><br>
+                O módulo <strong>${nome}</strong> ainda está sendo configurado.
             </div>`;
     }
 }
 
-// ... (Restante das funções: abrirNoticiaUnica, verificarEstadoURL, etc permanecem iguais)
-
 /**
- * Delegação de Eventos para Filtros de Navegação
- * Ajustado para capturar cliques nos IDs de categoria vindos do novo sistema de abas
+ * Delegação de Eventos para Filtros e Menu
  */
 document.addEventListener('click', (e) => {
     const tag = e.target.closest('.filter-tag');
-    if (tag) {
-        // Se a tag tiver um id de seção (dataset.section ou o próprio ID de navegação)
-        const secaoId = tag.dataset.section || tag.textContent.toLowerCase().trim();
+    const menuLink = e.target.closest('.nav-item a');
+
+    if (tag || menuLink) {
+        let secaoId;
         
-        // Limpa ativos e marca o novo
-        document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
-        tag.classList.add('active');
-        
-        carregarSecao(secaoId);
+        if (tag) {
+            secaoId = tag.dataset.section || tag.textContent.toLowerCase().trim();
+            document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+            tag.classList.add('active');
+        } else if (menuLink && menuLink.getAttribute('href') === '#') {
+            e.preventDefault();
+            secaoId = menuLink.textContent.toLowerCase().trim();
+        }
+
+        if (secaoId) carregarSecao(secaoId);
     }
 });
 
-// Inicialização Global
+// Inicialização
 window.addEventListener('DOMContentLoaded', () => {
-    // Carrega manchetes por padrão ao abrir
-    carregarSecao('manchetes');
-    verificarEstadoURL();
+    // Tenta carregar a seção inicial
+    const params = new URLSearchParams(window.location.search);
+    const secaoInicial = params.get('tab') || 'manchetes';
+    carregarSecao(secaoInicial);
 });
 
 window.carregarSecao = carregarSecao;

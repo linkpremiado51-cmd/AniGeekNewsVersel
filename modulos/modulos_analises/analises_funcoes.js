@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: modulos/modulos_analises/analises_funcoes.js
  * PAPEL: Funções utilitárias e suporte visual otimizadas
- * VERSÃO: 4.1 - Ajuste de Protocolo e Integração SPA
+ * VERSÃO: 4.2 - Correção de Embed e Sincronização de Modal
  */
 
 /**
@@ -33,10 +33,8 @@ export async function copiarLink(url) {
 export function compartilharNoticia(titulo, url) {
     const shareData = { title: titulo, url: url };
     
-    // Verifica se o navegador suporta o compartilhamento nativo
     if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
         navigator.share(shareData).catch(err => {
-            // Ignora erro se o usuário apenas cancelou o compartilhamento
             if (err.name !== 'AbortError') console.error(err);
         });
     } else {
@@ -51,31 +49,27 @@ export function trocarVideo(idPlayer, idVideo) {
     const player = document.getElementById(idPlayer);
     if (!player || !idVideo) return;
 
-    // Parâmetros para melhor UX no YouTube
     const params = "?autoplay=1&mute=0&modestbranding=1&rel=0";
-    
     let novoSrc = idVideo;
 
-    // Lógica para transformar ID simples em URL de Embed
+    // Lógica para transformar ID ou URL em Embed válido
     if (!idVideo.includes('http')) {
-        // AJUSTE: Usando o padrão oficial de embed para evitar bloqueios de segurança
+        // CORREÇÃO: Usando o domínio oficial do YouTube Embed
         novoSrc = `https://www.youtube.com/embed/${idVideo}`;
+    } else if (idVideo.includes('watch?v=')) {
+        novoSrc = idVideo.replace('watch?v=', 'embed/');
     }
 
-    // Adiciona parâmetros de reprodução
+    // Adiciona parâmetros de reprodução se não existirem
     player.src = novoSrc.includes('?') ? `${novoSrc}&autoplay=1` : novoSrc + params;
-    
-    if (typeof window.logVisual === 'function') {
-        window.logVisual(`Vídeo atualizado: ${idVideo}`);
-    }
 }
 
 /**
  * Gerencia o fechamento do modal e limpa a URL (ID da notícia)
  */
 export function fecharModalPrincipal() {
-    // Sincronizado com o modal-manager.js que já temos no projeto
-    if (window.fecharModalNoticia) {
+    // Prioriza a função global do modal-manager.js
+    if (typeof window.fecharModalNoticia === 'function') {
         window.fecharModalNoticia();
     } else {
         const modal = document.getElementById('modal-noticia-global');
@@ -83,15 +77,11 @@ export function fecharModalPrincipal() {
         document.body.style.overflow = 'auto';
     }
     
-    // Notifica o orquestrador (navegacao.js) para resetar a trava de segurança
-    if (typeof window.notificarModalFechado === 'function') {
-        window.notificarModalFechado();
-    }
-
-    // Limpeza da URL
+    // Limpeza da URL para manter o estado da SPA limpo
     const url = new URL(window.location);
     if (url.searchParams.has('id')) {
         url.searchParams.delete('id');
+        // Remove o ID da barra de endereços sem recarregar a página
         window.history.pushState({}, '', url.pathname + url.search);
     }
 }

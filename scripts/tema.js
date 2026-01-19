@@ -1,8 +1,36 @@
 /* scripts/tema.js */
 
+/**
+ * SISTEMA DE LOGS VISUAIS GLOBAIS
+ * Esta função cria mensagens temporárias na tela para debug em dispositivos móveis.
+ */
+window.logVisual = function(mensagem) {
+    let container = document.getElementById('log-visual-container');
+    
+    // Se o container não existir (definido no geral.css), cria ele dinamicamente
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'log-visual-container';
+        document.body.appendChild(container);
+    }
+
+    const entrada = document.createElement('div');
+    entrada.className = 'log-entry';
+    entrada.innerText = `> ${mensagem}`;
+    
+    // Adiciona no topo do container
+    container.prepend(entrada);
+
+    // Remove automaticamente após 5 segundos
+    setTimeout(() => {
+        if (entrada.parentNode) {
+            entrada.remove();
+        }
+    }, 5000);
+};
+
 // Seleção dos elementos de alternância de tema
 const themeToggle = document.getElementById('mobileThemeToggle');
-const mobileThemeLabel = document.getElementById('mobileThemeLabel');
 
 // Função para aplicar o tema e salvar a preferência
 function alternarTema() {
@@ -12,7 +40,7 @@ function alternarTema() {
     const modoAtivo = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
     localStorage.setItem('pref-theme', modoAtivo);
     
-    console.log(`Tema alterado para: ${modoAtivo}`);
+    if (window.logVisual) window.logVisual(`Tema alterado para: ${modoAtivo}`);
 }
 
 // Escuta o clique no interruptor (toggle)
@@ -46,5 +74,6 @@ window.scrollToTop = function() {
     window.scrollTo({top: 0, behavior: 'smooth'});
 };
 
-// Inicializa o tema assim que o script carrega
+// Inicializa o tema e avisa o sistema
 carregarTemaPreferido();
+if (window.logVisual) window.logVisual("Sistema de UI Inicializado.");

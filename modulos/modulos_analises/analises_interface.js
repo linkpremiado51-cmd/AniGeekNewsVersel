@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: modulos/modulos_analises/analises_interface.js
  * PAPEL: Renderização Visual das Análises
- * VERSÃO: 4.2 - UX de Player e Otimização SPA
+ * VERSÃO: 4.3 - INTEGRADO COM BUSCA (FEEDBACK DE RESULTADOS)
  */
 
 import { limparEspacos } from './analises_funcoes.js';
@@ -38,11 +38,16 @@ function criarRelacionadosHtml(newsId, relacionados) {
     `).join('');
 }
 
-export function renderizarBotaoPaginacao() {
+// ALTERADO: Adicionado controle de visibilidade baseado em resultados
+export function renderizarBotaoPaginacao(mostrar = true) {
     const paginationWrapper = document.getElementById('novo-pagination-modulo');
     if (!paginationWrapper) return;
 
-    // Evita renderizar o botão múltiplas vezes
+    if (!mostrar) {
+        paginationWrapper.innerHTML = "";
+        return;
+    }
+
     if (paginationWrapper.querySelector('#btn-carregar-mais')) return;
 
     paginationWrapper.innerHTML = `
@@ -53,24 +58,38 @@ export function renderizarBotaoPaginacao() {
             </button>
         </div>
     `;
-    logInterface("Botão de paginação pronto.");
 }
 
-export function renderizarNoticias(noticias, limite) {
+export function renderizarNoticias(noticias, limite, termoBusca = "") {
     const container = document.getElementById('container-principal');
     if (!container) return;
 
-    const baseUrl = window.location.origin + window.location.pathname;
     const listaParaExibir = noticias.slice(0, limite);
 
+    // LÓGICA DE BUSCA: Caso não encontre nada
+    if (termoBusca && listaParaExibir.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:80px 20px; color:var(--text-muted);">
+                <i class="fa-solid fa-magnifying-glass-minus" style="font-size:3.5rem; margin-bottom:20px; display:block; opacity:0.2;"></i>
+                <h3 style="color:var(--text-main); margin-bottom:10px;">Nenhum resultado para "${termoBusca}"</h3>
+                <p>Tente termos mais genéricos ou verifique a ortografia.</p>
+            </div>`;
+        renderizarBotaoPaginacao(false); // Oculta o botão se não há resultados
+        return;
+    }
+
+    // Caso base: Se a lista geral estiver vazia (sem busca)
     if (listaParaExibir.length === 0) {
         container.innerHTML = `
             <div style="text-align:center; padding:80px 20px; opacity:0.6;">
                 <i class="fa-solid fa-layer-group" style="font-size:3rem; margin-bottom:20px; display:block;"></i>
                 <p>Nenhuma análise sincronizada no momento.</p>
             </div>`;
+        renderizarBotaoPaginacao(false);
         return;
     }
+
+    const baseUrl = window.location.origin + window.location.pathname;
 
     container.innerHTML = listaParaExibir.map(news => {
         const shareUrl = `${baseUrl}?id=${encodeURIComponent(news.id)}`;
@@ -146,4 +165,8 @@ export function renderizarNoticias(noticias, limite) {
         </article>
       `;
     }).join('');
+
+    // Se houver mais notícias além do limite, mostra o botão. Se for busca com poucos resultados, oculta.
+    const totalDisponivel = noticias.length;
+    renderizarBotaoPaginacao(totalDisponivel > limite);
 }

@@ -1,6 +1,7 @@
 /**
- * modulos/modulos_analises/analises_funcoes.js
- * Funções utilitárias e suporte visual otimizadas
+ * ARQUIVO: modulos/modulos_analises/analises_funcoes.js
+ * PAPEL: Funções utilitárias e suporte visual otimizadas
+ * VERSÃO: 4.1 - Ajuste de Protocolo e Integração SPA
  */
 
 /**
@@ -31,8 +32,11 @@ export async function copiarLink(url) {
  */
 export function compartilharNoticia(titulo, url) {
     const shareData = { title: titulo, url: url };
-    if (navigator.share && navigator.canShare(shareData)) {
+    
+    // Verifica se o navegador suporta o compartilhamento nativo
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
         navigator.share(shareData).catch(err => {
+            // Ignora erro se o usuário apenas cancelou o compartilhamento
             if (err.name !== 'AbortError') console.error(err);
         });
     } else {
@@ -47,31 +51,44 @@ export function trocarVideo(idPlayer, idVideo) {
     const player = document.getElementById(idPlayer);
     if (!player || !idVideo) return;
 
+    // Parâmetros para melhor UX no YouTube
     const params = "?autoplay=1&mute=0&modestbranding=1&rel=0";
     
-    // Formata o ID do vídeo para o padrão embed do YouTube caso não seja uma URL completa
     let novoSrc = idVideo;
+
+    // Lógica para transformar ID simples em URL de Embed
     if (!idVideo.includes('http')) {
-        novoSrc = `http://googleusercontent.com/youtube.com/${idVideo}`;
+        // AJUSTE: Usando o padrão oficial de embed para evitar bloqueios de segurança
+        novoSrc = `https://www.youtube.com/embed/${idVideo}`;
     }
-    
-    // Adiciona os parâmetros de autoplay e interface
+
+    // Adiciona parâmetros de reprodução
     player.src = novoSrc.includes('?') ? `${novoSrc}&autoplay=1` : novoSrc + params;
+    
+    if (typeof window.logVisual === 'function') {
+        window.logVisual(`Vídeo atualizado: ${idVideo}`);
+    }
 }
 
 /**
  * Gerencia o fechamento do modal e limpa a URL (ID da notícia)
  */
 export function fecharModalPrincipal() {
-    // Tenta usar a função global se existir, senão usa a lógica local
-    if (window.fecharModal) {
-        window.fecharModal();
+    // Sincronizado com o modal-manager.js que já temos no projeto
+    if (window.fecharModalNoticia) {
+        window.fecharModalNoticia();
     } else {
-        const modal = document.getElementById('modal-noticia');
+        const modal = document.getElementById('modal-noticia-global');
         if (modal) modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
     }
     
-    // Remove o parâmetro 'id' da URL sem recarregar a página
+    // Notifica o orquestrador (navegacao.js) para resetar a trava de segurança
+    if (typeof window.notificarModalFechado === 'function') {
+        window.notificarModalFechado();
+    }
+
+    // Limpeza da URL
     const url = new URL(window.location);
     if (url.searchParams.has('id')) {
         url.searchParams.delete('id');

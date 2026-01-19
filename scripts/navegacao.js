@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: scripts/navegacao.js
  * PAPEL: Orquestrador de Infraestrutura (SPA) e Navegação via Modal
- * VERSÃO: 3.3 - Tratamento de Erros e Reset de Estado
+ * VERSÃO: 3.4 - Compatibilidade com Logs Visuais e Persistência de UI
  */
 
 const displayPrincipal = document.getElementById('dynamic-content'); 
@@ -16,20 +16,22 @@ function scrollTopo() {
  */
 async function carregarSecao(nome) {
     if (!displayPrincipal) {
-        console.error("Erro: Container 'dynamic-content' não encontrado no index.");
+        if (window.logVisual) window.logVisual("❌ Erro: Container principal ausente.");
         return;
     }
 
-    // Garantia SPA: Fecha modais e libera scroll ao trocar de aba
+    if (window.logVisual) window.logVisual(`🔄 Trocando para: ${nome.toUpperCase()}`);
+
+    // Garantia SPA: Fecha modais ao trocar de aba
     if (typeof window.fecharModalNoticia === 'function') {
         window.fecharModalNoticia();
     }
 
     // Feedback visual de carregamento
     displayPrincipal.innerHTML = `
-        <div style="text-align: center; padding: 120px; color: var(--text-muted); opacity: 0.5;">
-            <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 24px; margin-bottom: 10px;"></i>
-            <br>SINCRONIZANDO MÓDULO ${nome.toUpperCase()}...
+        <div style="text-align: center; padding: 120px; color: var(--text-muted);">
+            <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 24px; margin-bottom: 15px; color: var(--primary);"></i>
+            <br><span style="font-weight:700; letter-spacing:1px;">SINCRONIZANDO ${nome.toUpperCase()}...</span>
         </div>`;
     
     try {
@@ -37,7 +39,7 @@ async function carregarSecao(nome) {
 
         // 1. Busca o Shell HTML da seção
         const response = await fetch(`./secoes/${nome}.html`);
-        if (!response.ok) throw new Error(`Estrutura da seção ${nome} não encontrada.`);
+        if (!response.ok) throw new Error(`Arquivo ${nome}.html não encontrado.`);
         
         const htmlBase = await response.text();
         displayPrincipal.innerHTML = htmlBase;
@@ -47,26 +49,29 @@ async function carregarSecao(nome) {
         const antigo = document.getElementById(scriptId);
         if (antigo) antigo.remove();
 
-        // 3. Injeção do Módulo JS com mapeamento de caminhos
+        // 3. Injeção do Módulo JS
         const novoScript = document.createElement("script");
         novoScript.id = scriptId;
         novoScript.type = "module";
         
-        // Mapeamento dinâmico: Se for analises, usa a pasta modulos_analises, senão usa o padrão
-        const pastaModulo = (nome === 'analises') ? `modulos_${nome}` : nome;
+        // Mapeamento dinâmico ajustado
+        let pastaModulo = nome;
+        if (nome === 'analises') pastaModulo = 'modulos_analises';
+        
         novoScript.src = `./modulos/${pastaModulo}/${nome}_principal.js?v=${Date.now()}`;
         
         novoScript.onload = () => {
             if (typeof window.inicializarSecao === 'function') {
                 const root = displayPrincipal.querySelector(`[data-root="${nome}"]`) || displayPrincipal;
                 window.inicializarSecao(root, { modo: 'lista', origem: nome });
-                console.log(`✅ Módulo ${nome} iniciado.`);
+                if (window.logVisual) window.logVisual(`✅ Módulo ${nome} carregado.`);
+            } else {
+                if (window.logVisual) window.logVisual(`⚠️ window.inicializarSecao não definida em ${nome}.`);
             }
         };
 
         novoScript.onerror = () => {
-            console.error(`Falha ao carregar o script em: ${novoScript.src}`);
-            throw new Error(`Script do módulo ${nome} não encontrado.`);
+            if (window.logVisual) window.logVisual(`❌ Erro ao carregar script de ${nome}.`);
         };
 
         document.body.appendChild(novoScript);
@@ -76,8 +81,8 @@ async function carregarSecao(nome) {
         console.error(`❌ Erro SPA:`, err);
         displayPrincipal.innerHTML = `
             <div style="text-align:center; padding:100px; color: var(--text-main);">
-                <i class="fa-solid fa-ghost" style="font-size: 40px; margin-bottom:15px; opacity:0.3;"></i><br>
-                O módulo <strong>${nome}</strong> ainda está sendo configurado.
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 40px; margin-bottom:15px; color: var(--primary);"></i><br>
+                O módulo <strong>${nome}</strong> não pôde ser carregado no momento.
             </div>`;
     }
 }
@@ -101,13 +106,17 @@ document.addEventListener('click', (e) => {
             secaoId = menuLink.textContent.toLowerCase().trim();
         }
 
-        if (secaoId) carregarSecao(secaoId);
+        if (secaoId) {
+            // Normalização de nomes para as seções físicas
+            if (secaoId === 'manchetes' || secaoId === 'analises' || secaoId === 'smartphones' || secaoId === 'tecnologia') {
+                carregarSecao(secaoId);
+            }
+        }
     }
 });
 
 // Inicialização
 window.addEventListener('DOMContentLoaded', () => {
-    // Tenta carregar a seção inicial
     const params = new URLSearchParams(window.location.search);
     const secaoInicial = params.get('tab') || 'manchetes';
     carregarSecao(secaoInicial);

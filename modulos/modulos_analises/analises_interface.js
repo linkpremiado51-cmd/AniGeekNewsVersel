@@ -1,20 +1,14 @@
 /**
  * ARQUIVO: modulos/modulos_analises/analises_interface.js
- * PAPEL: Renderização Visual das Análises (Com ativação de Comentários e Logs)
- * VERSÃO: 5.0 - INTEGRADO AO MÓDULO GLOBAL DE COMENTÁRIOS
+ * PAPEL: Renderização Visual das Análises
+ * VERSÃO: 5.1 - Correção de Escopo de Variáveis e UX de Comentários
  */
 
 import { limparEspacos } from './analises_funcoes.js';
 
-/**
- * Sistema de Log Visual de Emergência
- * Se a função window.logVisual não existir, ele cria uma temporária para não travar o código
- */
 function logInterface(msg) {
     if (typeof window.logVisual === 'function') {
         window.logVisual(`[Interface] ${msg}`);
-    } else {
-        console.log(`[Interface Log] ${msg}`);
     }
 }
 
@@ -44,16 +38,18 @@ function criarRelacionadosHtml(newsId, relacionados) {
     `).join('');
 }
 
-export function renderizarBotaoPaginacao(mostrar = true) {
+/**
+ * Renderiza o botão de paginação baseado na contagem real
+ */
+export function renderizarBotaoPaginacao(total, limite) {
     const paginationWrapper = document.getElementById('novo-pagination-modulo');
     if (!paginationWrapper) return;
 
-    if (!mostrar) {
+    // Se o total de notícias for menor ou igual ao que já mostramos, remove o botão
+    if (total <= limite) {
         paginationWrapper.innerHTML = "";
         return;
     }
-
-    if (paginationWrapper.querySelector('#btn-carregar-mais')) return;
 
     paginationWrapper.innerHTML = `
         <div style="text-align: center; padding: 20px 0 60px 0; width: 100%;">
@@ -70,25 +66,23 @@ export function renderizarNoticias(noticias, limite, termoBusca = "") {
     if (!container) return;
 
     const listaParaExibir = noticias.slice(0, limite);
+    const totalDisponivel = noticias.length;
 
+    // Feedback visual para busca vazia
     if (termoBusca && listaParaExibir.length === 0) {
         container.innerHTML = `
             <div style="text-align:center; padding:80px 20px; color:var(--text-muted);">
                 <i class="fa-solid fa-magnifying-glass-minus" style="font-size:3.5rem; margin-bottom:20px; display:block; opacity:0.2;"></i>
                 <h3 style="color:var(--text-main); margin-bottom:10px;">Nenhum resultado para "${termoBusca}"</h3>
-                <p>Tente termos mais genéricos ou verifique a ortografia.</p>
+                <p>Tente outros termos ou limpe a busca.</p>
             </div>`;
-        renderizarBotaoPaginacao(false);
+        renderizarBotaoPaginacao(0, 0);
         return;
     }
 
     if (listaParaExibir.length === 0) {
-        container.innerHTML = `
-            <div style="text-align:center; padding:80px 20px; opacity:0.6;">
-                <i class="fa-solid fa-layer-group" style="font-size:3rem; margin-bottom:20px; display:block;"></i>
-                <p>Nenhuma análise sincronizada no momento.</p>
-            </div>`;
-        renderizarBotaoPaginacao(false);
+        container.innerHTML = `<p style="text-align:center; padding:50px;">Nenhuma análise disponível.</p>`;
+        renderizarBotaoPaginacao(0, 0);
         return;
     }
 
@@ -111,9 +105,7 @@ export function renderizarNoticias(noticias, limite, termoBusca = "") {
             </div>
             
             <div class="destaque-header">
-              <h2 class="destaque-titulo">
-                ${news.titulo}
-              </h2>
+              <h2 class="destaque-titulo">${news.titulo}</h2>
             </div>
 
             <p class="destaque-resumo">${news.resumo || ''}</p>
@@ -157,7 +149,11 @@ export function renderizarNoticias(noticias, limite, termoBusca = "") {
           </div>
 
           <div class="comments-trigger-bar" style="cursor: pointer;" 
-               onclick="if(window.secaoComentarios) { window.secaoComentarios.abrir('${news.id}'); } else { alert('Erro: Módulo de comentários não carregado.'); }">
+               onclick="if(window.secaoComentarios && window.secaoComentarios.abrir) { 
+                            window.secaoComentarios.abrir('${news.id}'); 
+                        } else { 
+                            if(window.logVisual) window.logVisual('⚠️ Aguarde... Módulo carregando.');
+                        }">
             <div class="trigger-left" style="display: flex; align-items: center; gap: 10px; color: var(--tema-cor); font-weight: 700; font-size: 0.85rem;">
               <i class="fa-solid fa-circle-nodes"></i>
               <span>Ver discussão da comunidade...</span>
@@ -170,5 +166,6 @@ export function renderizarNoticias(noticias, limite, termoBusca = "") {
       `;
     }).join('');
 
-    renderizarBotaoPaginacao(totalDisponivel > limite);
+    // Chama a paginação passando os valores corretos
+    renderizarBotaoPaginacao(totalDisponivel, limite);
 }

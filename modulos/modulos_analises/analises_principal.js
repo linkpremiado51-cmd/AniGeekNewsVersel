@@ -1,27 +1,26 @@
 /**
  * ARQUIVO: modulos/modulos_analises/analises_principal.js
  * PAPEL: Módulo de Análises Profundas
- * VERSÃO: 4.2 - INTEGRADO COM BUSCA GLOBAL (EVENT-DRIVEN)
+ * VERSÃO: 4.3 - Correção de Paginação e Integração de Busca
  */
 
 import * as Funcoes from './analises_funcoes.js';
 import * as Interface from './analises_interface.js';
 
 let todasAsAnalisesLocais = [];
-let analisesFiltradas = []; // Nova variável para busca
+let analisesFiltradas = []; 
 let noticiasExibidasCount = 5;
-let termoBuscaAtivo = ""; // Cache do termo atual
+let termoBuscaAtivo = ""; 
 
-// Fallback para log caso a função global não exista
+// Fallback para log
 const log = (msg) => window.logVisual ? window.logVisual(msg) : console.log(`[Análises]: ${msg}`);
 
-// --- CONTRATO DE INICIALIZAÇÃO (Exigido pelo navegacao.js) ---
+// --- CONTRATO DE INICIALIZAÇÃO ---
 window.inicializarSecao = function(containerRoot, contexto) {
-    log(`Módulo Análises iniciado em modo: ${contexto.modo}`);
+    log(`Módulo Análises iniciado.`);
     
-    // Inicia a sincronização e escutas de eventos
     iniciarIntegracao();
-    configurarEscutaBusca(); // Ativa a integração com scripts/busca.js
+    configurarEscutaBusca(); 
     carregarBlocoEditorial();
 };
 
@@ -50,25 +49,25 @@ window.analises = {
         const totalDisponivel = listaAtual.length;
         
         if (noticiasExibidasCount >= totalDisponivel) {
-            log(`Fim da lista.`);
+            log(`Fim dos resultados.`);
         } else {
             noticiasExibidasCount += 5;
             atualizarInterface();
+            log(`Mostrando mais 5...`);
         }
     }
 };
 
 /**
- * INTEGRAÇÃO COM BUSCA GLOBAL (scripts/busca.js)
+ * INTEGRAÇÃO COM BUSCA GLOBAL
  */
 function configurarEscutaBusca() {
-    // Escuta termo de busca
     window.addEventListener('busca:termo', (e) => {
         termoBuscaAtivo = e.detail.termo.toLowerCase();
+        log(`Busca detectada: ${termoBuscaAtivo}`);
         processarFiltro();
     });
 
-    // Escuta comando de limpar
     window.addEventListener('busca:limpar', () => {
         termoBuscaAtivo = "";
         processarFiltro();
@@ -82,20 +81,20 @@ function processarFiltro() {
         analisesFiltradas = todasAsAnalisesLocais.filter(n => 
             (n.titulo && n.titulo.toLowerCase().includes(termoBuscaAtivo)) ||
             (n.subtitulo && n.subtitulo.toLowerCase().includes(termoBuscaAtivo)) ||
-            (n.conteudo && n.conteudo.toLowerCase().includes(termoBuscaAtivo))
+            (n.categoria && n.categoria.toLowerCase().includes(termoBuscaAtivo))
         );
     }
     
-    // Resetamos a paginação ao buscar para mostrar os primeiros resultados
     noticiasExibidasCount = 5; 
     atualizarInterface();
 }
 
 /**
- * Delegação de Eventos
+ * Delegação de Eventos (Ajustada para os novos IDs)
  */
 document.addEventListener('click', (e) => {
-    const btnMais = e.target.closest('#btn-carregar-mais');
+    // Escuta tanto o ID antigo quanto a nova classe de paginação
+    const btnMais = e.target.closest('#btn-carregar-mais') || e.target.closest('.btn-paginacao-geek');
     if (btnMais) {
         e.preventDefault();
         window.analises.carregarMaisNovo();
@@ -110,11 +109,11 @@ document.addEventListener('click', (e) => {
 });
 
 function atualizarInterface() {
-    // Se houver busca ativa, renderiza a lista filtrada, senão a lista completa
     const dadosParaExibir = termoBuscaAtivo ? analisesFiltradas : todasAsAnalisesLocais;
     
+    // Passa os dados para a interface renderizar nos containers corretos
     Interface.renderizarNoticias(dadosParaExibir, noticiasExibidasCount);
-    Interface.renderizarBotaoPaginacao();
+    Interface.renderizarBotaoPaginacao(dadosParaExibir.length, noticiasExibidasCount);
 }
 
 function iniciarIntegracao() {
@@ -124,7 +123,6 @@ function iniciarIntegracao() {
                 .filter(n => n.origem === 'analises')
                 .sort((a, b) => (b.data || 0) - (a.data || 0));
             
-            // Se houver uma busca em andamento quando os dados chegarem, re-filtra
             if (termoBuscaAtivo) processarFiltro();
             else atualizarInterface();
         }
@@ -135,14 +133,6 @@ function iniciarIntegracao() {
     }
 
     window.addEventListener('firebase:data_updated', filtrarEAtualizar);
-    
-    const checkData = setInterval(() => {
-        if (todasAsAnalisesLocais.length === 0 && window.noticiasFirebase?.length > 0) {
-            filtrarEAtualizar();
-            clearInterval(checkData);
-        }
-    }, 500);
-    setTimeout(() => clearInterval(checkData), 5000);
 }
 
 async function carregarBlocoEditorial() {
@@ -150,7 +140,7 @@ async function carregarBlocoEditorial() {
     if (tituloEl) tituloEl.textContent = "Análises Profundas";
     
     const descEl = document.getElementById('capa-descricao');
-    if (descEl) descEl.textContent = "Críticas técnicas, teorias e opiniões sobre os maiores lançamentos.";
+    if (descEl) descEl.textContent = "Críticas técnicas e opiniões sobre os maiores lançamentos.";
 }
 
-log("Módulo de Análises Pronto e Integrado com Busca.");
+log("Módulo de Análises Sincronizado.");

@@ -1,11 +1,11 @@
 /* ======================================================
    scripts/busca.js
    PAPEL: Infraestrutura de Busca (EVENT-DRIVEN)
-   NÃO renderiza UI
-   NÃO acessa dados
+   VERSÃO: 5.2 - Com Diagnóstico de Evento
 ====================================================== */
 
 const inputBusca = document.getElementById('input-busca-global');
+const surfaceBusca = document.getElementById('search-results-surface');
 let timeoutBusca = null;
 
 if (inputBusca) {
@@ -16,21 +16,26 @@ if (inputBusca) {
             .toLowerCase()
             .trim();
 
-        // Busca vazia = notifica limpeza
+        // Busca vazia = limpa a interface e notifica
         if (!termo) {
+            if (surfaceBusca) {
+                surfaceBusca.innerHTML = '';
+                surfaceBusca.style.display = 'none';
+            }
             window.dispatchEvent(new CustomEvent('busca:limpar'));
             return;
         }
 
         timeoutBusca = setTimeout(() => {
-            console.log(`🔍 Evento de busca emitido: "${termo}"`);
+            if (window.logVisual) window.logVisual(`🔍 Buscando: "${termo}"`);
 
+            // Emite o evento para o motor de busca processar
             window.dispatchEvent(
                 new CustomEvent('busca:termo', {
                     detail: { termo }
                 })
             );
-        }, 250);
+        }, 300);
     });
 }
 
@@ -40,5 +45,9 @@ if (inputBusca) {
 window.limparBuscaGlobal = function () {
     if (!inputBusca) return;
     inputBusca.value = '';
+    if (surfaceBusca) {
+        surfaceBusca.innerHTML = '';
+        surfaceBusca.style.display = 'none';
+    }
     window.dispatchEvent(new CustomEvent('busca:limpar'));
 };

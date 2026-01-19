@@ -1,10 +1,8 @@
 /**
  * ARQUIVO: comentarios_de_secao/comentarios_funcoes.js
- * PAPEL: Controle de Visibilidade e Persistência (Diagnóstico Mobile)
- * VERSÃO: 5.1 - Logs de Estado Visual
+ * PAPEL: Controle de Visibilidade e UI do Modal
+ * VERSÃO: 5.2 - Otimizado para Performance Mobile
  */
-
-import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /**
  * Controla a exibição do modal de comentários com verificação de estado
@@ -13,81 +11,54 @@ export function toggleComentarios(abrir = true, idConteudo = null) {
     const modal = document.getElementById('modal-comentarios-global');
     
     if (!modal) {
-        if (window.logVisual) window.logVisual("❌ Erro: Modal não existe no DOM.");
-        console.warn("Funções: Modal de comentários não encontrado.");
+        if (window.logVisual) window.logVisual("❌ Erro: Modal não encontrado.");
         return;
     }
 
     if (abrir) {
-        if (window.logVisual) window.logVisual(`[UI] Ativando modal para: ${idConteudo}`);
+        if (window.logVisual) window.logVisual(`[UI] Abrindo modal...`);
         
-        // Vincula o ID ao elemento para referência futura
         if (idConteudo) {
             modal.dataset.idAtual = idConteudo;
         }
 
-        // Garante a exibição do bloco antes da animação
+        // Prepara o display
         modal.style.display = 'flex';
         
-        // Força o reflow (necessário para alguns navegadores mobile processarem a transição)
+        // Força o reflow para garantir que a animação CSS ocorra
         void modal.offsetWidth; 
 
         modal.classList.add('active');
-        document.body.style.overflow = 'hidden'; // Trava o scroll do fundo
+        document.body.style.overflow = 'hidden'; 
 
-        if (window.logVisual) window.logVisual("✨ Modal visualmente ativo.");
+        if (window.logVisual) window.logVisual("✨ Interface pronta.");
     } else {
-        if (window.logVisual) window.logVisual("[UI] Desativando modal.");
+        if (window.logVisual) window.logVisual("[UI] Fechando...");
         
         modal.classList.remove('active');
         
-        // Aguarda a transição do CSS antes de ocultar totalmente
+        // Aguarda a transição do CSS (0.3s) antes de remover o display flex
         setTimeout(() => {
             if (!modal.classList.contains('active')) {
                 modal.style.display = 'none';
                 modal.dataset.idAtual = ""; 
-                if (window.logVisual) window.logVisual("🌑 Modal ocultado.");
+                if (window.logVisual) window.logVisual("🌑 Modal fechado.");
             }
-        }, 300);
+        }, 350);
         
         document.body.style.overflow = 'auto';
     }
 }
 
 /**
- * Envia um novo comentário para o Firestore (Usado internamente pelo módulo principal)
- */
-export async function enviarNovoComentario(db, idConteudo, texto) {
-    if (!texto || !texto.trim()) {
-        if (window.logVisual) window.logVisual("⚠️ Texto vazio.");
-        return;
-    }
-
-    try {
-        if (window.logVisual) window.logVisual("🚀 Gravando no Firestore...");
-        
-        const colRef = collection(db, "analises", idConteudo, "comentarios");
-        await addDoc(colRef, {
-            autor: window.AniGeekUser?.nome || "Usuário Geek",
-            texto: texto.trim(),
-            data: serverTimestamp()
-        });
-
-        if (window.logVisual) window.logVisual("✅ Sucesso ao gravar.");
-        limparCampoInput();
-    } catch (error) {
-        if (window.logVisual) window.logVisual("❌ Erro no Firebase: " + error.message);
-        console.error("Erro Firebase:", error);
-    }
-}
-
-/**
- * Limpa o campo de texto após o envio
+ * Limpa o campo de texto após o envio bem-sucedido
  */
 export function limparCampoInput() {
     const input = document.getElementById('input-novo-comentario');
     if (input) {
         input.value = '';
-        input.focus();
+        // No mobile, o focus pode abrir o teclado sem querer, 
+        // então removemos o foco após limpar se necessário.
+        input.blur(); 
     }
 }

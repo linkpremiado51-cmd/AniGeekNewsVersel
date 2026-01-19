@@ -1,13 +1,36 @@
 /**
  * ARQUIVO: comentarios_de_secao/comentarios_principal.js
- * PAPEL: Módulo Global Autônomo de Comentários (Com Diagnóstico Visual)
- * VERSÃO: 5.1 - Logs Visuais para Depuração em Mobile
+ * PAPEL: Módulo Global Autônomo de Comentários (Com Registro de API Ultra-Rápido)
+ * VERSÃO: 5.2 - Correção de Inicialização Global
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, onSnapshot, query, orderBy, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import * as Interface from './comentarios_interface.js';
 import * as Funcoes from './comentarios_funcoes.js';
+
+// --- INICIALIZAÇÃO DA API GLOBAL (Executa antes de tudo) ---
+window.secaoComentarios = {
+    abrir: (id) => {
+        if (window.logVisual) window.logVisual(`[API] Abrindo modal para: ${id}`);
+        
+        const modalExiste = document.getElementById('modal-comentarios-global');
+        if (!modalExiste) {
+            if (window.logVisual) window.logVisual("[Interface] Criando estrutura modal...");
+            Interface.injetarEstruturaModal();
+        }
+        
+        Funcoes.toggleComentarios(true, id);
+        carregarComentariosRealTime(id);
+    },
+    fechar: () => {
+        if (window.logVisual) window.logVisual("[API] Fechando modal.");
+        if (unsubscribeAtual) unsubscribeAtual();
+        idConteudoAtual = null;
+        Funcoes.toggleComentarios(false);
+    },
+    enviar: () => enviarComentario()
+};
 
 const firebaseConfig = {
     apiKey: "AIzaSyBC_ad4X9OwCHKvcG_pNQkKEl76Zw2tu6o",
@@ -30,12 +53,13 @@ async function carregarComentariosRealTime(idConteudo) {
 
     if (window.logVisual) window.logVisual(`[Firebase] Conectando: ${idConteudo}`);
     
+    // IMPORTANTE: Verifique se sua coleção no Firestore chama "analises" (minúsculo)
     const colRef = collection(db, "analises", idConteudo, "comentarios");
     const q = query(colRef, orderBy("data", "asc"));
 
     unsubscribeAtual = onSnapshot(q, (snapshot) => {
         const comentarios = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        if (window.logVisual) window.logVisual(`[Firebase] ${comentarios.length} mensagens recebidas.`);
+        if (window.logVisual) window.logVisual(`[Firebase] ${comentarios.length} mensagens.`);
         Interface.renderizarListaComentarios(comentarios);
     }, (error) => {
         if (window.logVisual) window.logVisual("❌ Erro Firebase: " + error.code);
@@ -46,7 +70,7 @@ async function carregarComentariosRealTime(idConteudo) {
 async function enviarComentario() {
     const input = document.getElementById('input-novo-comentario');
     if (!input || !input.value.trim() || !idConteudoAtual) {
-        if (window.logVisual) window.logVisual("⚠️ Campo vazio ou ID ausente.");
+        if (window.logVisual) window.logVisual("⚠️ Campo vazio.");
         return;
     }
 
@@ -55,68 +79,35 @@ async function enviarComentario() {
     input.value = ""; 
 
     try {
-        if (window.logVisual) window.logVisual("📤 Enviando comentário...");
+        if (window.logVisual) window.logVisual("📤 Enviando...");
         const colRef = collection(db, "analises", idConteudoAtual, "comentarios");
         await addDoc(colRef, {
             autor: nomeAutor,
             texto: texto,
             data: serverTimestamp()
         });
-        if (window.logVisual) window.logVisual("✅ Comentário publicado!");
+        if (window.logVisual) window.logVisual("✅ Publicado!");
     } catch (error) {
         if (window.logVisual) window.logVisual("❌ Erro ao enviar.");
         console.error(error);
     }
 }
 
-/**
- * API GLOBAL COM DIAGNÓSTICO
- */
-window.secaoComentarios = {
-    abrir: (id) => {
-        if (window.logVisual) window.logVisual(`[API] Abrindo modal para: ${id}`);
-        
-        // Diagnóstico de Injeção
-        const modalExiste = document.getElementById('modal-comentarios-global');
-        if (!modalExiste) {
-            if (window.logVisual) window.logVisual("[Interface] Criando estrutura modal...");
-            Interface.injetarEstruturaModal();
-        }
-        
-        Funcoes.toggleComentarios(true, id);
-        carregarComentariosRealTime(id);
-    },
-    fechar: () => {
-        if (window.logVisual) window.logVisual("[API] Fechando modal.");
-        if (unsubscribeAtual) unsubscribeAtual();
-        idConteudoAtual = null;
-        Funcoes.toggleComentarios(false);
-    },
-    enviar: enviarComentario
-};
-
-// Inicia o serviço
+// Inicia a injeção da interface
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        Interface.injetarEstruturaModal();
-        if (window.logVisual) window.logVisual("🚀 Módulo pronto (DOM Loaded)");
-    });
+    document.addEventListener('DOMContentLoaded', () => Interface.injetarEstruturaModal());
 } else {
     Interface.injetarEstruturaModal();
-    if (window.logVisual) window.logVisual("🚀 Módulo pronto (Immediate)");
 }
 
-// Escuta de cliques globais para botões dinâmicos
+// Escuta de cliques globais
 document.addEventListener('click', (e) => {
-    // Detecta se o usuário clicou em algum botão de fechar
     const fecharBtn = e.target.closest('.btn-close-comentarios') || e.target.id === 'btn-fechar-comentarios';
     if (fecharBtn || e.target.classList.contains('modal-comentarios-overlay')) {
         window.secaoComentarios.fechar();
     }
 
-    // Detecta envio
     if (e.target.closest('#btn-enviar-comentario') || e.target.closest('#btn-enviar-global')) {
-        if (window.logVisual) window.logVisual("🖱️ Clique no botão Enviar detectado.");
         window.secaoComentarios.enviar();
     }
 });
@@ -127,4 +118,4 @@ document.addEventListener('keypress', (e) => {
     }
 });
 
-if (window.logVisual) window.logVisual("✔️ Módulo Comentários Carregado.");
+if (window.logVisual) window.logVisual("✔️ Módulo Comentários Ativado.");

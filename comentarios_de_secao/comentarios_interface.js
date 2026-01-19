@@ -1,13 +1,15 @@
 /**
  * ARQUIVO: comentarios_de_secao/comentarios_interface.js
- * Responsável por gerar e injetar o HTML do sistema de comentários
+ * PAPEL: Gerador de Interface Dinâmica para o Módulo de Comentários
+ * VERSÃO: 5.0 - IDs Padronizados e Injeção Limpa
  */
 
 /**
- * Cria a estrutura base do modal no DOM se ela não existir
+ * Cria a estrutura base do modal no DOM se ela não existir.
+ * Esta estrutura é injetada uma única vez no index.html pelo script principal.
  */
 export function injetarEstruturaModal() {
-    // Evita duplicatas
+    // Evita duplicatas no DOM
     if (document.getElementById('modal-comentarios-global')) return;
 
     const modalHTML = `
@@ -19,7 +21,7 @@ export function injetarEstruturaModal() {
                         <span style="margin-left:8px; font-weight:bold;">Comunidade</span>
                         <small id="comentarios-subtitulo" style="display:block; opacity:0.6; font-size:10px;">Discussão Ativa</small>
                     </div>
-                    <button id="btn-fechar-comentarios" class="btn-close-comentarios" onclick="window.secaoComentarios.fechar()">&times;</button>
+                    <button id="btn-fechar-comentarios" class="btn-close-comentarios">&times;</button>
                 </div>
                 
                 <div id="lista-comentarios-fluxo" class="comentarios-body">
@@ -28,7 +30,7 @@ export function injetarEstruturaModal() {
 
                 <div class="comentarios-footer">
                     <div class="input-container-global">
-                        <input type="text" id="input-novo-comentario" placeholder="Escreva algo...">
+                        <input type="text" id="input-novo-comentario" placeholder="Escreva algo..." autocomplete="off">
                         <button id="btn-enviar-global" class="btn-enviar-comentario">
                             <i class="fa-solid fa-paper-plane"></i>
                         </button>
@@ -39,36 +41,37 @@ export function injetarEstruturaModal() {
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    console.log("Interface: Estrutura do modal injetada no body.");
+    if (window.logVisual) window.logVisual("Interface: Modal Global injetado no Body.");
 }
 
 /**
- * Gera o HTML de um único balão de comentário
+ * Gera o HTML de um único balão de comentário com suporte a cores e avatares
  */
-export function criarBalaoComentario(autor, texto, inicial = "G") {
+export function criarBalaoComentario(autor, texto) {
     const nomeExibicao = autor || "Anônimo";
     const letra = nomeExibicao.charAt(0).toUpperCase();
     
     return `
-        <div class="comentario-item" style="display: flex; gap: 12px; margin-bottom: 16px; align-items: flex-start;">
-            <div class="comentario-avatar" style="width: 32px; height: 32px; background: #8A2BE2; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+        <div class="comentario-item">
+            <div class="comentario-avatar">
                 ${letra}
             </div>
-            <div class="comentario-texto-wrapper" style="background: rgba(138, 43, 226, 0.05); padding: 10px; border-radius: 0 12px 12px 12px; flex-grow: 1; border: 1px solid rgba(138, 43, 226, 0.1);">
-                <strong class="comentario-autor" style="display: block; font-size: 0.75rem; color: #8A2BE2; margin-bottom: 2px;">${nomeExibicao}</strong>
-                <p class="comentario-texto" style="margin: 0; font-size: 0.9rem; color: var(--text-main); line-height: 1.4;">${texto}</p>
+            <div class="comentario-texto-wrapper">
+                <strong class="comentario-autor">${nomeExibicao}</strong>
+                <p class="comentario-texto">${texto}</p>
             </div>
         </div>
     `;
 }
 
 /**
- * Recebe o array do Firebase e renderiza na tela
+ * Recebe o array do Firebase e renderiza no container de fluxo
  */
 export function renderizarListaComentarios(comentarios) {
     const listaContainer = document.getElementById('lista-comentarios-fluxo');
     if (!listaContainer) return;
 
+    // Caso não existam comentários
     if (!comentarios || comentarios.length === 0) {
         listaContainer.innerHTML = `
             <div style="text-align:center; padding:40px 20px; opacity:0.5;">
@@ -78,13 +81,18 @@ export function renderizarListaComentarios(comentarios) {
         return;
     }
 
-    // Renderiza a lista de balões
-    listaContainer.innerHTML = comentarios.map(c => 
-        criarBalaoComentario(c.nome || c.autor || c.usuario, c.texto || c.comentario || c.msg)
-    ).join('');
+    // Renderiza a lista mapeando os campos possíveis do Firebase
+    listaContainer.innerHTML = comentarios.map(c => {
+        const autor = c.autor || c.nome || c.usuario || "Anônimo";
+        const texto = c.texto || c.comentario || "";
+        return criarBalaoComentario(autor, texto);
+    }).join('');
 
-    // Rola suavemente para o final
+    // Rola suavemente para o final da conversa
     setTimeout(() => {
-        listaContainer.scrollTo({ top: listaContainer.scrollHeight, behavior: 'smooth' });
+        listaContainer.scrollTo({ 
+            top: listaContainer.scrollHeight, 
+            behavior: 'smooth' 
+        });
     }, 100);
 }

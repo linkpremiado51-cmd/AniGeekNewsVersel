@@ -1,5 +1,4 @@
-
-<div class="destaque-wrapper">
+<div class="destaque-wrapper" data-root="analises">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <link rel="stylesheet" href="./modulos/modulos_analises/analises_estilo.css">
   <link rel="stylesheet" href="./comentarios_de_secao/comentarios_estilo.css">
@@ -7,7 +6,7 @@
   <div id="capa-editorial" class="capa-editorial-block">
     <div class="capa-content-inner">
       <h1 id="capa-titulo" class="capa-title">Análises Profundas</h1>
-      <p id="capa-descricao" class="capa-desc">Carregando editorial...</p>
+      <p id="capa-descricao" class="capa-desc">Explorando cada detalhe do universo Geek.</p>
       <div class="subcategorias-tags" id="subcategorias-container"></div>
     </div>
   </div>
@@ -34,30 +33,6 @@
   </div>
 
   <div id="toast-copiado">Link copiado!</div>
-
-  <script>
-    (function() {
-      console.log("Injetor: Iniciando carregamento dos módulos...");
-      const timestamp = Date.now();
-
-      // 1. Carrega o Módulo de Comentários
-      const scriptComentarios = document.createElement('script');
-      scriptComentarios.type = 'module';
-      scriptComentarios.src = './comentarios_de_secao/comentarios_principal.js?v=' + timestamp;
-      document.body.appendChild(scriptComentarios);
-
-      // 2. Carrega o Módulo de Análises
-      const scriptId = 'script-analises-loader';
-      const oldScript = document.getElementById(scriptId);
-      if (oldScript) oldScript.remove();
-
-      const scriptAnalises = document.createElement('script');
-      scriptAnalises.id = scriptId;
-      scriptAnalises.type = 'module';
-      scriptAnalises.src = './modulos/modulos_analises/analises_principal.js?v=' + timestamp;
-      document.body.appendChild(scriptAnalises);
-    })();
-  </script>
 
   <style>
     :root {

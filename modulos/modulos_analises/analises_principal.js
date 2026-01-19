@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: modulos/modulos_analises/analises_principal.js
  * PAPEL: Módulo de Análises Profundas
- * VERSÃO: 4.0 - Integrado ao Orquestrador SPA
+ * VERSÃO: 4.1 - Ajustado para Navegação no Modal Global
  */
 
 import * as Funcoes from './analises_funcoes.js';
@@ -10,11 +10,14 @@ import * as Interface from './analises_interface.js';
 let todasAsAnalisesLocais = [];
 let noticiasExibidasCount = 5;
 
+// Fallback para log caso a função global não exista
+const log = (msg) => window.logVisual ? window.logVisual(msg) : console.log(`[Análises]: ${msg}`);
+
 // --- CONTRATO DE INICIALIZAÇÃO (Exigido pelo navegacao.js) ---
 window.inicializarSecao = function(containerRoot, contexto) {
-    window.logVisual(`Módulo Análises iniciado em modo: ${contexto.modo}`);
+    log(`Módulo Análises iniciado em modo: ${contexto.modo}`);
     
-    // Inicia a sincronização usando os dados globais ou escutando o Firebase
+    // Inicia a sincronização
     iniciarIntegracao();
     carregarBlocoEditorial();
 };
@@ -26,7 +29,14 @@ window.analises = {
     ...Funcoes,
     abrirNoModalGlobal: (id) => {
         const noticia = todasAsAnalisesLocais.find(n => n.id === id);
-        if (noticia && window.abrirModalNoticia) window.abrirModalNoticia(noticia);
+        if (noticia && window.abrirModalNoticia) {
+            // Passamos a notícia selecionada e a lista completa para o Modal Manager
+            // permitindo que os botões "Anterior" e "Próxima" funcionem.
+            window.abrirModalNoticia({
+                ...noticia,
+                lista: todasAsAnalisesLocais 
+            });
+        }
     },
     toggleComentarios: (abrir, id = null) => {
         if (window.secaoComentarios && typeof window.secaoComentarios.abrir === 'function') {
@@ -37,7 +47,7 @@ window.analises = {
     carregarMaisNovo: () => {
         const totalNoBanco = todasAsAnalisesLocais.length;
         if (noticiasExibidasCount >= totalNoBanco) {
-            window.logVisual(`Fim da lista.`);
+            log(`Fim da lista de análises.`);
         } else {
             noticiasExibidasCount += 5;
             atualizarInterface();
@@ -46,7 +56,7 @@ window.analises = {
 };
 
 /**
- * Delegação de Eventos para elementos injetados dinamicamente
+ * Delegação de Eventos
  */
 document.addEventListener('click', (e) => {
     const btnMais = e.target.closest('#btn-carregar-mais');
@@ -68,10 +78,6 @@ function atualizarInterface() {
     Interface.renderizarBotaoPaginacao();
 }
 
-/**
- * Sincronização Inteligente:
- * Prioriza o cache global do config-firebase.js para velocidade
- */
 function iniciarIntegracao() {
     const filtrarEAtualizar = () => {
         if (window.noticiasFirebase) {
@@ -83,21 +89,29 @@ function iniciarIntegracao() {
         }
     };
 
-    // Se os dados já existem no cache global, carrega imediatamente
     if (window.noticiasFirebase && window.noticiasFirebase.length > 0) {
         filtrarEAtualizar();
     }
 
-    // Fica atento a novas atualizações que chegarem no Firebase global
+    // Escuta atualizações do Firebase via evento customizado ou polling do config-firebase
     window.addEventListener('firebase:data_updated', filtrarEAtualizar);
+    
+    // Fallback: Se o firebase-config não dispara evento, checamos em intervalo curto no início
+    const checkData = setInterval(() => {
+        if (todasAsAnalisesLocais.length === 0 && window.noticiasFirebase?.length > 0) {
+            filtrarEAtualizar();
+            clearInterval(checkData);
+        }
+    }, 500);
+    setTimeout(() => clearInterval(checkData), 5000);
 }
 
-// O bloco editorial pode ser buscado via fetch direto ou via instância global se preferir
 async function carregarBlocoEditorial() {
-    // Nota: Recomendo usar o db exportado do config-firebase para evitar inicialização dupla
-    // Por hora, mantemos a lógica de visual apenas para o título
     const tituloEl = document.getElementById('capa-titulo');
     if (tituloEl) tituloEl.textContent = "Análises Profundas";
+    
+    const descEl = document.getElementById('capa-descricao');
+    if (descEl) descEl.textContent = "Críticas técnicas, teorias e opiniões sobre os maiores lançamentos.";
 }
 
-window.logVisual("Módulo de Análises Pronto para SPA.");
+log("Módulo de Análises Pronto.");

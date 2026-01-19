@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: comentarios_de_secao/comentarios_principal.js
- * PAPEL: Módulo Global Autônomo de Comentários (Auto-Injetável)
- * VERSÃO: 5.0 - Sincronizado com Identidade e Navegação SPA
+ * PAPEL: Módulo Global Autônomo de Comentários (Com Diagnóstico Visual)
+ * VERSÃO: 5.1 - Logs Visuais para Depuração em Mobile
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -9,7 +9,6 @@ import { getFirestore, collection, onSnapshot, query, orderBy, addDoc, serverTim
 import * as Interface from './comentarios_interface.js';
 import * as Funcoes from './comentarios_funcoes.js';
 
-// Configuração Firebase (Unificada)
 const firebaseConfig = {
     apiKey: "AIzaSyBC_ad4X9OwCHKvcG_pNQkKEl76Zw2tu6o",
     authDomain: "anigeeknews.firebaseapp.com",
@@ -25,72 +24,70 @@ const db = getFirestore(app);
 let unsubscribeAtual = null;
 let idConteudoAtual = null;
 
-/**
- * Escuta os comentários no Firestore para uma notícia específica
- */
 async function carregarComentariosRealTime(idConteudo) {
     if (unsubscribeAtual) unsubscribeAtual();
     idConteudoAtual = idConteudo;
 
-    if (window.logVisual) window.logVisual(`Conectando mensagens de: ${idConteudo}`);
+    if (window.logVisual) window.logVisual(`[Firebase] Conectando: ${idConteudo}`);
     
-    // Caminho da sub-coleção dentro de 'analises'
     const colRef = collection(db, "analises", idConteudo, "comentarios");
     const q = query(colRef, orderBy("data", "asc"));
 
     unsubscribeAtual = onSnapshot(q, (snapshot) => {
         const comentarios = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        if (window.logVisual) window.logVisual(`${comentarios.length} mensagens lidas.`);
-        
-        // Renderiza na Interface Global
+        if (window.logVisual) window.logVisual(`[Firebase] ${comentarios.length} mensagens recebidas.`);
         Interface.renderizarListaComentarios(comentarios);
     }, (error) => {
-        if (window.logVisual) window.logVisual("Erro Firebase Comentários.");
+        if (window.logVisual) window.logVisual("❌ Erro Firebase: " + error.code);
         console.error(error);
     });
 }
 
-/**
- * Processa o envio do comentário usando o autor logado ou anônimo
- */
 async function enviarComentario() {
     const input = document.getElementById('input-novo-comentario');
-    if (!input || !input.value.trim() || !idConteudoAtual) return;
+    if (!input || !input.value.trim() || !idConteudoAtual) {
+        if (window.logVisual) window.logVisual("⚠️ Campo vazio ou ID ausente.");
+        return;
+    }
 
     const texto = input.value.trim();
     const nomeAutor = window.AniGeekUser?.nome || "Leitor Geek";
-
-    input.value = ""; // Limpeza rápida para UX
+    input.value = ""; 
 
     try {
+        if (window.logVisual) window.logVisual("📤 Enviando comentário...");
         const colRef = collection(db, "analises", idConteudoAtual, "comentarios");
         await addDoc(colRef, {
             autor: nomeAutor,
             texto: texto,
             data: serverTimestamp()
         });
-        if (window.logVisual) window.logVisual("Comentário enviado!");
+        if (window.logVisual) window.logVisual("✅ Comentário publicado!");
     } catch (error) {
-        if (window.logVisual) window.logVisual("Erro ao comentar.");
+        if (window.logVisual) window.logVisual("❌ Erro ao enviar.");
         console.error(error);
     }
 }
 
 /**
- * EXPOSIÇÃO DA API GLOBAL
- * Qualquer parte do sistema (Análises, Smartphones, etc) chama estas funções.
+ * API GLOBAL COM DIAGNÓSTICO
  */
 window.secaoComentarios = {
     abrir: (id) => {
-        if (window.logVisual) window.logVisual(`Abrindo comentários: ${id}`);
-        // Garante que a estrutura HTML existe no DOM
-        Interface.injetarEstruturaModal(); 
+        if (window.logVisual) window.logVisual(`[API] Abrindo modal para: ${id}`);
+        
+        // Diagnóstico de Injeção
+        const modalExiste = document.getElementById('modal-comentarios-global');
+        if (!modalExiste) {
+            if (window.logVisual) window.logVisual("[Interface] Criando estrutura modal...");
+            Interface.injetarEstruturaModal();
+        }
         
         Funcoes.toggleComentarios(true, id);
         carregarComentariosRealTime(id);
     },
     fechar: () => {
-        if (window.logVisual) window.logVisual("Fechando comentários.");
+        if (window.logVisual) window.logVisual("[API] Fechando modal.");
         if (unsubscribeAtual) unsubscribeAtual();
         idConteudoAtual = null;
         Funcoes.toggleComentarios(false);
@@ -98,34 +95,36 @@ window.secaoComentarios = {
     enviar: enviarComentario
 };
 
-// --- INICIALIZAÇÃO E EVENTOS ---
-
-// Injeta o modal automaticamente ao carregar o script
+// Inicia o serviço
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => Interface.injetarEstruturaModal());
+    document.addEventListener('DOMContentLoaded', () => {
+        Interface.injetarEstruturaModal();
+        if (window.logVisual) window.logVisual("🚀 Módulo pronto (DOM Loaded)");
+    });
 } else {
     Interface.injetarEstruturaModal();
+    if (window.logVisual) window.logVisual("🚀 Módulo pronto (Immediate)");
 }
 
-// Ouvintes Globais para o Modal Injetado
+// Escuta de cliques globais para botões dinâmicos
 document.addEventListener('click', (e) => {
-    // Fechar
+    // Detecta se o usuário clicou em algum botão de fechar
     const fecharBtn = e.target.closest('.btn-close-comentarios') || e.target.id === 'btn-fechar-comentarios';
     if (fecharBtn || e.target.classList.contains('modal-comentarios-overlay')) {
         window.secaoComentarios.fechar();
     }
 
-    // Enviar
+    // Detecta envio
     if (e.target.closest('#btn-enviar-comentario') || e.target.closest('#btn-enviar-global')) {
+        if (window.logVisual) window.logVisual("🖱️ Clique no botão Enviar detectado.");
         window.secaoComentarios.enviar();
     }
 });
 
-// Suporte ao Enter no input injetado
 document.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && e.target.id === 'input-novo-comentario') {
         window.secaoComentarios.enviar();
     }
 });
 
-if (window.logVisual) window.logVisual("Módulo Comentários Global Ativado.");
+if (window.logVisual) window.logVisual("✔️ Módulo Comentários Carregado.");

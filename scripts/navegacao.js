@@ -1,10 +1,11 @@
 /**
  * ARQUIVO: scripts/navegacao.js
- * PAPEL: Orquestrador de Infraestrutura e Navegação (SPA)
- * VERSÃO: 2.0 - Final Blindada (Módulos, Histórico e Validações)
+ * PAPEL: Orquestrador de Infraestrutura (SPA) e Navegação via Modal
+ * VERSÃO: 3.1 - Blindagem contra reabertura e padronização de contrato
  */
 
 const displayPrincipal = document.getElementById('conteudo_de_destaque');
+let modalAberto = false; // Controle de estado para blindagem (Ajuste 2)
 
 /**
  * Função Utilitária para Scroll Suave
@@ -14,12 +15,11 @@ function scrollTopo() {
 }
 
 /**
- * Carrega dinamicamente o feed de uma seção orquestrando CSS, HTML e Módulo JS.
+ * Carrega dinamicamente o feed de uma seção (HTML + CSS + Módulo JS).
  */
 async function carregarSecao(nome) {
     if (!displayPrincipal) return;
 
-    // Feedback visual de carregamento
     displayPrincipal.innerHTML = `
         <div style="text-align: center; padding: 120px; color: var(--text-muted); opacity: 0.5;">
             <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 24px; margin-bottom: 10px;"></i>
@@ -27,20 +27,15 @@ async function carregarSecao(nome) {
         </div>`;
     
     try {
-        // 1. Limpa o contrato anterior para garantir isolamento
         window.inicializarSecao = null;
-
-        // 2. Gerencia o CSS do Módulo (Isolamento Visual)
         gerenciarCSSDoModulo(nome);
 
-        // 3. Carrega o HTML base (Shell) da seção
         const response = await fetch(`./secoes/${nome}.html`);
         if (!response.ok) throw new Error("Estrutura da seção não encontrada.");
         
         const htmlBase = await response.text();
         displayPrincipal.innerHTML = htmlBase;
 
-        // 4. Importa e Inicializa o Script do Módulo
         const scriptId = `script-modulo-ativo`;
         document.getElementById(scriptId)?.remove(); 
 
@@ -50,17 +45,9 @@ async function carregarSecao(nome) {
         novoScript.src = `./modulos/modulos_${nome}/${nome}_principal.js?v=${Date.now()}`;
         
         novoScript.onload = () => {
-            // 5. Executa o contrato de inicialização com Verificação de Contêiner
             if (typeof window.inicializarSecao === 'function') {
                 const root = displayPrincipal.querySelector(`[data-root="${nome}"]`) || displayPrincipal;
-                
-                if (!root.hasAttribute('data-root')) {
-                    console.warn(`Módulo ${nome} não possui data-root explícito no HTML. Usando fallback.`);
-                }
-
                 window.inicializarSecao(root, { modo: 'lista', origem: nome });
-            } else {
-                console.error(`Contrato falhou: window.inicializarSecao não definida em ${nome}`);
             }
         };
 
@@ -69,69 +56,38 @@ async function carregarSecao(nome) {
 
     } catch (err) {
         console.error(`Erro ao orquestrar seção ${nome}:`, err);
-        displayPrincipal.innerHTML = `<div style="text-align:center; padding:100px;">Erro: Módulo ${nome} indisponível.</div>`;
+        displayPrincipal.innerHTML = `<div style="text-align:center; padding:100px;">Módulo ${nome} indisponível.</div>`;
     }
 }
 
 /**
- * Abre a notícia em página cheia, consumindo a inteligência do módulo correspondente.
+ * Ponte para abrir notícia. 100% centralizado no Modal.
  */
-async function abrirNoticiaUnica(item) {
-    if (!displayPrincipal) return;
+window.abrirNoticiaUnica = function(item) {
+    if (!item || !item.id || modalAberto) return; // Blindagem contra reabertura dupla
 
-    // Validação de Segurança (Correção 1)
-    if (!item || !item.id) {
-        console.error('abrirNoticiaUnica chamado com item inválido:', item);
-        return;
-    }
+    modalAberto = true;
 
-    const origem = item.origem || 'manchetes';
-
-    // Atualização de URL/Histórico para Deep Linking (Correção 2)
+    // 1. Atualiza a URL (Deep Linking)
     const url = new URL(window.location);
     url.searchParams.set('id', item.id);
     window.history.pushState({ id: item.id }, '', url);
 
-    try {
-        window.inicializarSecao = null; 
-        gerenciarCSSDoModulo(origem);
-
-        displayPrincipal.innerHTML = `
-            <div class="foco-noticia-wrapper" style="animation: fadeIn 0.4s ease; max-width: var(--container-w); margin: 0 auto; padding: 20px;">
-                <div class="barra-ferramentas-foco" style="display: flex; justify-content: flex-start; padding-bottom: 20px; border-bottom: 1px dashed var(--border); margin-bottom: 30px;">
-                    <button onclick="window.voltarParaLista()" class="btn-voltar-estilizado" style="background: none; border: 1px solid var(--text-main); color: var(--text-main); padding: 8px 18px; font-size: 10px; font-weight: 800; letter-spacing: 1px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.3s; text-transform: uppercase;">
-                        <i class="fa-solid fa-chevron-left" style="font-size: 14px;"></i> 
-                        <span>Voltar para ${origem.toUpperCase()}</span>
-                    </button>
-                </div>
-                <div id="container-principal-foco" data-root="${origem}">
-                    <p style="text-align:center; padding:50px; color:var(--text-muted);">Preparando leitura...</p>
-                </div>
-            </div>
-        `;
-
-        const scriptId = `script-modulo-ativo`;
-        document.getElementById(scriptId)?.remove();
-
-        const scriptModulo = document.createElement("script");
-        scriptModulo.id = scriptId;
-        scriptModulo.type = "module";
-        scriptModulo.src = `./modulos/modulos_${origem}/${origem}_principal.js?v=${Date.now()}`;
-
-        scriptModulo.onload = () => {
-            if (typeof window.inicializarSecao === 'function') {
-                const root = document.getElementById('container-principal-foco');
-                window.inicializarSecao(root, { modo: 'foco', item: item });
-            }
-        };
-
-        document.body.appendChild(scriptModulo);
-        scrollTopo();
-
-    } catch (err) {
-        console.error("Erro na ponte de foco:", err);
+    // 2. Aciona o Modal
+    if (typeof window.abrirModalNoticia === 'function') {
+        window.abrirModalNoticia(item);
+    } else {
+        console.error("ERRO: modal-manager.js não carregado.");
+        modalAberto = false;
     }
-}
+};
+
+/**
+ * Hook para ser chamado pelo modal-manager.js ao fechar
+ */
+window.notificarModalFechado = function() {
+    modalAberto = false;
+};
 
 /**
  * Gerencia o carregamento de CSS de forma modular
@@ -150,7 +106,7 @@ function gerenciarCSSDoModulo(nome) {
 /**
  * Vigia de URL para Links Compartilhados
  */
-function verificarLinkCompartilhado() {
+function verificarEstadoURL() {
     const params = new URLSearchParams(window.location.search);
     const idNoticia = params.get('id');
 
@@ -158,15 +114,11 @@ function verificarLinkCompartilhado() {
         const checkData = setInterval(() => {
             if (window.noticiasFirebase && window.noticiasFirebase.length > 0) {
                 const item = window.noticiasFirebase.find(n => n.id === idNoticia);
-                if (item) {
-                    if (typeof window.abrirModalNoticia === 'function') {
-                        window.abrirModalNoticia(item);
-                        carregarSecao('manchetes');
-                    } else {
-                        abrirNoticiaUnica(item);
-                    }
+                if (item && typeof window.abrirModalNoticia === 'function') {
+                    window.abrirModalNoticia(item);
+                    modalAberto = true;
                 } else {
-                    carregarSecao('manchetes');
+                    console.warn('Notícia não encontrada para o ID:', idNoticia); // Fallback UX (Ajuste 3)
                 }
                 clearInterval(checkData);
             }
@@ -176,41 +128,30 @@ function verificarLinkCompartilhado() {
 }
 
 /**
- * Retorna para a listagem da seção ativa e limpa URL
+ * Sincronização com botões Voltar / Avançar (POPSTATE)
  */
-window.voltarParaLista = function() {
-    const url = new URL(window.location);
-    url.searchParams.delete('id');
-    window.history.pushState({}, '', url);
-
-    const tagAtiva = document.querySelector('.filter-tag.active');
-    const secaoDestino = tagAtiva ? tagAtiva.dataset.section : 'manchetes';
-    
-    carregarSecao(secaoDestino);
-};
-
-/**
- * Sincronização com botões Voltar / Avançar do navegador (POPSTATE)
- */
-window.addEventListener('popstate', () => {
+window.addEventListener('popstate', (event) => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
 
+    // Se voltar e não tiver ID, fecha o modal se estiver aberto (Padronização Ajuste 1)
+    if (!id && typeof window.fecharModalNoticia === 'function') {
+        window.fecharModalNoticia();
+        return;
+    }
+
+    // Se tiver ID, abre o modal correspondente
     if (id && window.noticiasFirebase) {
         const item = window.noticiasFirebase.find(n => n.id === id);
         if (item) {
-            abrirNoticiaUnica(item);
-            return;
+            window.abrirModalNoticia(item);
+            modalAberto = true;
         }
     }
-
-    const tagAtiva = document.querySelector('.filter-tag.active');
-    const secao = tagAtiva ? tagAtiva.dataset.section : 'manchetes';
-    carregarSecao(secao);
 });
 
 /**
- * Delegação de Eventos para Filtros
+ * Delegação de Eventos para Filtros de Navegação
  */
 document.addEventListener('click', (e) => {
     const tag = e.target.closest('.filter-tag');
@@ -221,6 +162,9 @@ document.addEventListener('click', (e) => {
     }
 });
 
+/**
+ * Utilitário para Menu Mobile
+ */
 window.toggleMobileMenu = function() {
     const menu = document.getElementById('mobileMenu');
     if (menu) menu.classList.toggle('active');
@@ -228,14 +172,9 @@ window.toggleMobileMenu = function() {
 
 // Inicialização Global
 window.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.has('id')) {
-        verificarLinkCompartilhado();
-    } else {
-        carregarSecao('manchetes');
-    }
+    carregarSecao('manchetes');
+    verificarEstadoURL();
 });
 
-// Exposição global
+// Exposição Global
 window.carregarSecao = carregarSecao;
-window.abrirNoticiaUnica = abrirNoticiaUnica;

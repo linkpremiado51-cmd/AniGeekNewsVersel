@@ -27,8 +27,8 @@
     .destaque-wrapper {
       padding-top: 20px;
       min-height: 100vh;
-      position: relative;
-      /* Removido transforms para não criar novos contextos de empilhamento */
+      /* 🛡️ Alterado para static para não sequestrar o contexto de empilhamento do modal global */
+      position: static; 
     }
 
     .capa-editorial-block { 
@@ -91,16 +91,18 @@
       background: #111; 
       color: white; 
       padding: 12px 25px; 
-      border-radius: 50px; /* Mais moderno */
+      border-radius: 50px; 
       opacity: 0; 
-      visibility: hidden; /* Garante que não capture cliques quando invisível */
+      visibility: hidden; 
       transition: 0.3s; 
-      z-index: 5000; /* Reduzido para não brigar com modais */
+      /* 🛡️ Z-index reduzido para nunca sobrepor o modal global (que usa 999.999) */
+      z-index: 1000; 
       font-weight: 700;
       font-size: 12px;
       border: 1px solid #333;
-      pointer-events: none; /* Crucial: o toast nunca deve bloquear cliques */
+      pointer-events: none; 
     }
+
     #toast-copiado.mostrar { 
       opacity: 1; 
       bottom: 40px; 
@@ -114,6 +116,8 @@
       max-width: var(--container-w);
       margin: 0 auto;
       padding: 0 20px;
+      /* 🛡️ Garante que o grid não esconda elementos fixos */
+      overflow: visible; 
     }
   </style>
 </div>

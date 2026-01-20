@@ -17,6 +17,82 @@
     <link rel="stylesheet" href="estilos/modal-pesquisa.css">
     
     <link rel="stylesheet" href="comentarios_de_secao/comentarios_estilo.css">
+
+    <style>
+        /* 🛡️ ESTILOS DA GAVETA DE SUGESTÕES (Autocomplete) */
+        .search-bar-wrapper {
+            position: relative; /* Necessário para posicionar a gaveta */
+        }
+
+        #search-suggestions-drawer {
+            display: none;
+            position: absolute;
+            top: 100%; /* Aparece colado abaixo da barra de busca */
+            left: 0;
+            width: 100%;
+            background: var(--card-bg, #1a1a1a);
+            border: 1px solid var(--border, #333);
+            border-top: none;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 9999;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        #search-suggestions-drawer.active {
+            display: block;
+        }
+
+        .suggestion-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .suggestion-item:last-child { border-bottom: none; }
+
+        .suggestion-item:hover {
+            background: rgba(138, 43, 226, 0.15); /* Destaque roxo suave */
+        }
+
+        .suggestion-item i {
+            color: #8A2BE2;
+            font-size: 0.9rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .suggestion-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .suggestion-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main, #fff);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .suggestion-category {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--text-muted, #aaa);
+            letter-spacing: 0.5px;
+        }
+
+        /* Ajuste no surface original para não conflitar */
+        #search-results-surface {
+            margin-top: 10px;
+        }
+    </style>
     
 </head>
 
@@ -46,6 +122,9 @@
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" id="input-busca-global" placeholder="Pesquisar notícias, animes ou análises..." autocomplete="off">
         </div>
+
+        <div id="search-suggestions-drawer" class="suggestions-drawer"></div>
+
         <div id="search-results-surface"></div>
     </div>
     <div class="filter-scroller" id="filterScroller"></div>

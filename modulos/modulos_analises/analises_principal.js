@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: modulos/modulos_analises/analises_principal.js
  * PAPEL: Módulo de Análises Profundas
- * VERSÃO: 4.3 - Correção de Paginação e Integração de Busca
+ * VERSÃO: 4.4 - Limpeza de Listeners e Proteção de Modal Global
  */
 
 import * as Funcoes from './analises_funcoes.js';
@@ -12,13 +12,11 @@ let analisesFiltradas = [];
 let noticiasExibidasCount = 5;
 let termoBuscaAtivo = ""; 
 
-// Fallback para log
 const log = (msg) => window.logVisual ? window.logVisual(msg) : console.log(`[Análises]: ${msg}`);
 
 // --- CONTRATO DE INICIALIZAÇÃO ---
 window.inicializarSecao = function(containerRoot, contexto) {
     log(`Módulo Análises iniciado.`);
-    
     iniciarIntegracao();
     configurarEscutaBusca(); 
     carregarBlocoEditorial();
@@ -38,8 +36,9 @@ window.analises = {
             });
         }
     },
+    // 🛡️ Ajustado para usar apenas a API global do secaoComentarios
     toggleComentarios: (abrir, id = null) => {
-        if (window.secaoComentarios && typeof window.secaoComentarios.abrir === 'function') {
+        if (window.secaoComentarios) {
             if (abrir) window.secaoComentarios.abrir(id);
             else window.secaoComentarios.fechar();
         }
@@ -53,7 +52,6 @@ window.analises = {
         } else {
             noticiasExibidasCount += 5;
             atualizarInterface();
-            log(`Mostrando mais 5...`);
         }
     }
 };
@@ -64,7 +62,6 @@ window.analises = {
 function configurarEscutaBusca() {
     window.addEventListener('busca:termo', (e) => {
         termoBuscaAtivo = e.detail.termo.toLowerCase();
-        log(`Busca detectada: ${termoBuscaAtivo}`);
         processarFiltro();
     });
 
@@ -80,38 +77,41 @@ function processarFiltro() {
     } else {
         analisesFiltradas = todasAsAnalisesLocais.filter(n => 
             (n.titulo && n.titulo.toLowerCase().includes(termoBuscaAtivo)) ||
-            (n.subtitulo && n.subtitulo.toLowerCase().includes(termoBuscaAtivo)) ||
-            (n.categoria && n.categoria.toLowerCase().includes(termoBuscaAtivo))
+            (n.subtitulo && n.subtitulo.toLowerCase().includes(termoBuscaAtivo))
         );
     }
-    
     noticiasExibidasCount = 5; 
     atualizarInterface();
 }
 
 /**
- * Delegação de Eventos (Ajustada para os novos IDs)
+ * DELEGAÇÃO DE EVENTOS LOCALIZADA
+ * 🛡️ Protegido contra conflitos com o Modal Global
  */
 document.addEventListener('click', (e) => {
-    // Escuta tanto o ID antigo quanto a nova classe de paginação
-    const btnMais = e.target.closest('#btn-carregar-mais') || e.target.closest('.btn-paginacao-geek');
+    const target = e.target;
+
+    // 1. Botão Carregar Mais
+    const btnMais = target.closest('.btn-paginacao-geek');
     if (btnMais) {
         e.preventDefault();
         window.analises.carregarMaisNovo();
+        return;
     }
 
-    const triggerComentarios = e.target.closest('.comments-trigger-bar');
-    if (triggerComentarios) {
-        const artigo = triggerComentarios.closest('article');
+    // 2. Abrir Comentários (Apenas se NÃO estiver clicando dentro do modal)
+    if (target.closest('.comments-trigger-bar') && !target.closest('[data-global-modal="true"]')) {
+        const artigo = target.closest('article');
         const idNoticia = artigo ? artigo.id.replace('artigo-', '') : null;
-        if (idNoticia) window.analises.toggleComentarios(true, idNoticia);
+        if (idNoticia) {
+            log(`Abrindo comentários para ${idNoticia}`);
+            window.analises.toggleComentarios(true, idNoticia);
+        }
     }
 });
 
 function atualizarInterface() {
     const dadosParaExibir = termoBuscaAtivo ? analisesFiltradas : todasAsAnalisesLocais;
-    
-    // Passa os dados para a interface renderizar nos containers corretos
     Interface.renderizarNoticias(dadosParaExibir, noticiasExibidasCount);
     Interface.renderizarBotaoPaginacao(dadosParaExibir.length, noticiasExibidasCount);
 }
@@ -127,20 +127,11 @@ function iniciarIntegracao() {
             else atualizarInterface();
         }
     };
-
-    if (window.noticiasFirebase && window.noticiasFirebase.length > 0) {
-        filtrarEAtualizar();
-    }
-
+    if (window.noticiasFirebase && window.noticiasFirebase.length > 0) filtrarEAtualizar();
     window.addEventListener('firebase:data_updated', filtrarEAtualizar);
 }
 
 async function carregarBlocoEditorial() {
     const tituloEl = document.getElementById('capa-titulo');
     if (tituloEl) tituloEl.textContent = "Análises Profundas";
-    
-    const descEl = document.getElementById('capa-descricao');
-    if (descEl) descEl.textContent = "Críticas técnicas e opiniões sobre os maiores lançamentos.";
 }
-
-log("Módulo de Análises Sincronizado.");

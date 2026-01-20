@@ -1,6 +1,6 @@
 /* ARQUIVO: comentarios_de_secao/comentarios_estilo.css */
 /* PAPEL: Estilização do Modal Global de Comentários */
-/* VERSÃO: 5.2 - Otimizado para Mobile e Variáveis de Fallback */
+/* VERSÃO: 5.3 - Correção de Z-Index e Hitbox do Botão Fechar */
 
 /* Overlay do Modal */
 .modal-comentarios-overlay {
@@ -9,13 +9,14 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.85); /* Escurecido para melhor contraste */
+    background: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(6px);
-    z-index: 99999; /* Z-index ultra alto para garantir que fique sobre tudo */
+    z-index: 100000; /* Aumentado para garantir prioridade absoluta */
     display: none;
     justify-content: center;
     align-items: flex-end;
     transition: opacity 0.3s ease;
+    pointer-events: auto; /* Garante que o fundo capture cliques para fechar */
 }
 
 /* Estado Ativo */
@@ -24,19 +25,20 @@
     opacity: 1;
 }
 
-/* Conteúdo do Modal (Estilo gaveta para mobile) */
+/* Conteúdo do Modal */
 .modal-comentarios-content {
-    background: var(--card-bg, #1a1a1a); /* Fallback caso a variável falhe */
+    background: var(--card-bg, #1a1a1a);
     color: var(--text-main, #ffffff);
     width: 100%;
     max-width: 500px;
-    height: 90vh; /* Aumentado para melhor uso da tela no celular */
+    height: 90vh;
     border-radius: 25px 25px 0 0;
     display: flex;
     flex-direction: column;
     position: relative;
     box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
     animation: slideUpComentarios 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100001;
 }
 
 @keyframes slideUpComentarios {
@@ -51,6 +53,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: relative; /* Necessário para o z-index do botão */
 }
 
 .header-label {
@@ -58,35 +61,31 @@
     flex-direction: column;
 }
 
-.header-label span {
-    font-weight: 800;
-    color: var(--text-main, #fff);
-    font-size: 1.2rem;
-}
-
-.header-label small {
-    color: #8A2BE2;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 0.65rem;
-    letter-spacing: 1px;
-}
-
+/* BOTÃO DE FECHAR ATUALIZADO (Correção de Clique) */
 .btn-close-comentarios {
-    background: rgba(138, 43, 226, 0.1);
+    background: rgba(138, 43, 226, 0.15);
     border: none;
     color: #fff;
-    width: 35px;
-    height: 35px;
+    width: 44px;  /* Tamanho ideal para toque mobile (Apple/Google standard) */
+    height: 44px;
     border-radius: 50%;
-    font-size: 20px;
+    font-size: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 100005; /* Maior que qualquer elemento do header */
+    pointer-events: auto; /* Força o recebimento do clique */
+    -webkit-tap-highlight-color: transparent;
 }
 
-/* Corpo (Lista de Mensagens) */
+.btn-close-comentarios:active {
+    transform: scale(0.9);
+    background: rgba(138, 43, 226, 0.3);
+}
+
+/* Corpo e Lista */
 .comentarios-body {
     flex: 1;
     overflow-y: auto;
@@ -95,7 +94,7 @@
     flex-direction: column;
     gap: 18px;
     background: var(--card-bg, #1a1a1a);
-    -webkit-overflow-scrolling: touch; /* Scroll suave no iOS */
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Balões de Comentário */
@@ -104,11 +103,6 @@
     gap: 12px;
     max-width: 95%;
     animation: fadeInComentario 0.3s ease;
-}
-
-@keyframes fadeInComentario {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
 }
 
 .comentario-avatar {
@@ -123,7 +117,6 @@
     font-size: 14px;
     color: #fff;
     flex-shrink: 0;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
 .comentario-texto-wrapper {
@@ -147,12 +140,12 @@
     line-height: 1.5;
 }
 
-/* Rodapé (Input de Texto) */
+/* Rodapé e Input */
 .comentarios-footer {
     padding: 20px;
     border-top: 1px solid var(--border, #333);
     background: var(--card-bg, #1a1a1a);
-    padding-bottom: calc(20px + env(safe-area-inset-bottom)); /* Ajuste para notch de celulares */
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
 }
 
 .input-container-global {
@@ -163,20 +156,6 @@
     padding: 10px 18px;
     border-radius: 30px;
     border: 1px solid var(--border, #444);
-    transition: border-color 0.3s;
-}
-
-.input-container-global:focus-within {
-    border-color: #8A2BE2;
-}
-
-.input-container-global input {
-    flex: 1;
-    background: none;
-    border: none;
-    color: #fff;
-    outline: none;
-    font-size: 1rem;
 }
 
 .btn-enviar-comentario {
@@ -185,12 +164,4 @@
     color: #8A2BE2;
     font-size: 1.4rem;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s;
-}
-
-.btn-enviar-comentario:active {
-    transform: scale(0.8);
 }

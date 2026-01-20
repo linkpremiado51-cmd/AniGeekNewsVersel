@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: scripts/navegacao.js
  * PAPEL: Orquestrador de Infraestrutura (SPA) e Navegação via Modal
- * VERSÃO: 3.4 - Compatibilidade com Logs Visuais e Persistência de UI
+ * VERSÃO: 3.5 - Correção de Conflito de Cliques e Delegamento Seguro
  */
 
 const displayPrincipal = document.getElementById('dynamic-content'); 
@@ -22,12 +22,16 @@ async function carregarSecao(nome) {
 
     if (window.logVisual) window.logVisual(`🔄 Trocando para: ${nome.toUpperCase()}`);
 
-    // Garantia SPA: Fecha modais ao trocar de aba
+    // Garantia SPA: Fecha modais de notícia ao trocar de aba
     if (typeof window.fecharModalNoticia === 'function') {
         window.fecharModalNoticia();
     }
+    
+    // NOVO: Fecha modal de comentários ao trocar de aba para evitar sobreposição
+    if (window.secaoComentarios && window.secaoComentarios.fechar) {
+        window.secaoComentarios.fechar();
+    }
 
-    // Feedback visual de carregamento
     displayPrincipal.innerHTML = `
         <div style="text-align: center; padding: 120px; color: var(--text-muted);">
             <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 24px; margin-bottom: 15px; color: var(--primary);"></i>
@@ -37,24 +41,20 @@ async function carregarSecao(nome) {
     try {
         window.inicializarSecao = null; 
 
-        // 1. Busca o Shell HTML da seção
         const response = await fetch(`./secoes/${nome}.html`);
         if (!response.ok) throw new Error(`Arquivo ${nome}.html não encontrado.`);
         
         const htmlBase = await response.text();
         displayPrincipal.innerHTML = htmlBase;
 
-        // 2. Limpeza de Scripts de Módulo Anteriores
         const scriptId = `script-modulo-ativo`;
         const antigo = document.getElementById(scriptId);
         if (antigo) antigo.remove();
 
-        // 3. Injeção do Módulo JS
         const novoScript = document.createElement("script");
         novoScript.id = scriptId;
         novoScript.type = "module";
         
-        // Mapeamento dinâmico ajustado
         let pastaModulo = nome;
         if (nome === 'analises') pastaModulo = 'modulos_analises';
         
@@ -65,13 +65,7 @@ async function carregarSecao(nome) {
                 const root = displayPrincipal.querySelector(`[data-root="${nome}"]`) || displayPrincipal;
                 window.inicializarSecao(root, { modo: 'lista', origem: nome });
                 if (window.logVisual) window.logVisual(`✅ Módulo ${nome} carregado.`);
-            } else {
-                if (window.logVisual) window.logVisual(`⚠️ window.inicializarSecao não definida em ${nome}.`);
             }
-        };
-
-        novoScript.onerror = () => {
-            if (window.logVisual) window.logVisual(`❌ Erro ao carregar script de ${nome}.`);
         };
 
         document.body.appendChild(novoScript);
@@ -79,18 +73,19 @@ async function carregarSecao(nome) {
 
     } catch (err) {
         console.error(`❌ Erro SPA:`, err);
-        displayPrincipal.innerHTML = `
-            <div style="text-align:center; padding:100px; color: var(--text-main);">
-                <i class="fa-solid fa-triangle-exclamation" style="font-size: 40px; margin-bottom:15px; color: var(--primary);"></i><br>
-                O módulo <strong>${nome}</strong> não pôde ser carregado no momento.
-            </div>`;
+        displayPrincipal.innerHTML = `<div style="text-align:center; padding:100px;">Erro ao carregar módulo.</div>`;
     }
 }
 
 /**
- * Delegação de Eventos para Filtros e Menu
+ * Delegação de Eventos Protegida
  */
 document.addEventListener('click', (e) => {
+    // 1. Ignorar cliques que ocorrem dentro do modal de comentários
+    if (e.target.closest('#modal-comentarios-global')) {
+        return; // Sai da função e deixa o comentarios_principal.js resolver
+    }
+
     const tag = e.target.closest('.filter-tag');
     const menuLink = e.target.closest('.nav-item a');
 
@@ -107,15 +102,14 @@ document.addEventListener('click', (e) => {
         }
 
         if (secaoId) {
-            // Normalização de nomes para as seções físicas
-            if (secaoId === 'manchetes' || secaoId === 'analises' || secaoId === 'smartphones' || secaoId === 'tecnologia') {
+            const secoesValidas = ['manchetes', 'analises', 'smartphones', 'tecnologia'];
+            if (secoesValidas.includes(secaoId)) {
                 carregarSecao(secaoId);
             }
         }
     }
 });
 
-// Inicialização
 window.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     const secaoInicial = params.get('tab') || 'manchetes';

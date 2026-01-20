@@ -1,114 +1,98 @@
-/* ======================================================
-   scripts/busca.js
-   PAPEL: Motor de Busca com Gaveta de Sugestões Integrada
-   VERSÃO: 7.0 - Filtro Real-Time via window.noticiasFirebase
-====================================================== */
+/* scripts/config-firebase.js */
 
-const inputBusca = document.getElementById('input-busca-global');
-const surfaceBusca = document.getElementById('search-results-surface');
-const drawerSugestoes = document.getElementById('search-suggestions-drawer');
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-let timeoutBusca = null;
+const firebaseConfig = {
+    apiKey: "AIzaSyBC_ad4X9OwCHKvcG_pNQkKEl76Zw2tu6o",
+    authDomain: "anigeeknews.firebaseapp.com",
+    projectId: "anigeeknews",
+    storageBucket: "anigeeknews.firebasestorage.app",
+    messagingSenderId: "769322939926",
+    appId: "1:769322939926:web:6eb91a96a3f74670882737",
+    measurementId: "G-G5T8CCRGZT"
+};
 
-if (inputBusca) {
-    inputBusca.addEventListener('input', (e) => {
-        clearTimeout(timeoutBusca);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-        const termo = e.target.value.toLowerCase().trim();
+window.noticiasFirebase = [];
+let linkProcessado = false;
 
-        if (!termo) {
-            limparTudo();
-            return;
+/**
+ * Função auxiliar para logs visuais seguros
+ */
+function avisar(msg) {
+    if (window.logVisual) window.logVisual(msg);
+    console.log(msg);
+}
+
+/**
+ * Normaliza os dados extraindo a imagem (thumb) e formatando o vídeo.
+ */
+function normalizarNoticia(doc, nomeColecao) {
+    const data = doc.data();
+    
+    const imagemExtraida = data.thumb || 
+                          (data.relacionados && data.relacionados.length > 0 ? data.relacionados[0].thumb : null) || 
+                          'https://anigeeknews.com/default-og.jpg';
+
+    let videoUrl = data.videoPrincipal || "";
+    if (videoUrl.includes("watch?v=")) {
+        videoUrl = videoUrl.replace("watch?v=", "embed/") + "?autoplay=1&mute=1&modestbranding=1";
+    } else if (videoUrl.includes("youtu.be/")) {
+        videoUrl = videoUrl.replace("youtu.be/", "youtube.com/embed/") + "?autoplay=1&mute=1&modestbranding=1";
+    }
+
+    return {
+        id: doc.id,
+        origem: nomeColecao,
+        ...data,
+        thumb: imagemExtraida,
+        videoPrincipal: videoUrl
+    };
+}
+
+window.verificarGatilhoDeLink = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const idDesejado = urlParams.get('id');
+
+    if (idDesejado && window.noticiasFirebase.length > 0) {
+        const noticiaEncontrada = window.noticiasFirebase.find(n => n.id === idDesejado);
+        
+        if (noticiaEncontrada && typeof window.abrirModalNoticia === 'function') {
+            avisar(`[DeepLink] Abrindo: ${idDesejado}`);
+            window.abrirModalNoticia(noticiaEncontrada);
+            linkProcessado = true; 
         }
-
-        // Mostra a gaveta imediatamente
-        if (drawerSugestoes) drawerSugestoes.classList.add('active');
-
-        timeoutBusca = setTimeout(() => {
-            processarBuscaIntegrada(termo);
-        }, 300);
-    });
-}
-
-/**
- * Processa a filtragem dos dados e renderiza as duas interfaces
- */
-function processarBuscaIntegrada(termo) {
-    if (!window.noticiasFirebase) return;
-
-    // 1. Filtra os dados no array global do Firebase
-    const resultados = window.noticiasFirebase.filter(noticia => {
-        const titulo = (noticia.titulo || "").toLowerCase();
-        const sub = (noticia.subtitulo || "").toLowerCase();
-        return titulo.includes(termo) || sub.includes(termo);
-    });
-
-    // 2. Renderiza a Gaveta de Sugestões (Apenas Títulos Rápidos)
-    renderizarGaveta(resultados.slice(0, 6)); // Mostra as 6 primeiras sugestões
-
-    // 3. Notifica o Surface (Resultados Principais/Cards)
-    if (surfaceBusca) {
-        window.dispatchEvent(new CustomEvent('busca:termo', { detail: { termo } }));
-    }
-}
-
-/**
- * Cria os itens da lista suspensa (Gaveta)
- */
-function renderizarGaveta(sugestoes) {
-    if (!drawerSugestoes) return;
-
-    if (sugestoes.length === 0) {
-        drawerSugestoes.innerHTML = `
-            <div class="suggestion-item">
-                <i class="fa-solid fa-face-frown"></i>
-                <div class="suggestion-info">
-                    <span class="suggestion-title">Nenhum resultado rápido encontrado</span>
-                </div>
-            </div>`;
-        return;
-    }
-
-    drawerSugestoes.innerHTML = sugestoes.map(item => `
-        <div class="suggestion-item" onclick="abrirPelaSugestao('${item.id}')">
-            <i class="fa-solid fa-bolt"></i>
-            <div class="suggestion-info">
-                <span class="suggestion-title">${item.titulo}</span>
-                <span class="suggestion-category">${item.origem || 'Destaque'}</span>
-            </div>
-        </div>
-    `).join('');
-}
-
-/**
- * Função para abrir a notícia ao clicar na sugestão
- */
-window.abrirPelaSugestao = function(id) {
-    const noticia = window.noticiasFirebase.find(n => n.id === id);
-    if (noticia && typeof window.abrirModalNoticia === 'function') {
-        window.abrirModalNoticia(noticia);
-        limparTudo();
     }
 };
 
-function limparTudo() {
-    if (inputBusca) inputBusca.value = '';
-    if (drawerSugestoes) {
-        drawerSugestoes.classList.remove('active');
-        drawerSugestoes.innerHTML = '';
-    }
-    if (surfaceBusca) {
-        surfaceBusca.innerHTML = '';
-        surfaceBusca.style.display = 'none';
-    }
-    window.dispatchEvent(new CustomEvent('busca:limpar'));
+function sincronizarComBusca(nomeColecao) {
+    onSnapshot(collection(db, nomeColecao), (snapshot) => {
+        window.noticiasFirebase = window.noticiasFirebase.filter(item => item.origem !== nomeColecao);
+        
+        const novosDados = snapshot.docs.map(doc => normalizarNoticia(doc, nomeColecao));
+        window.noticiasFirebase.push(...novosDados);
+        window.noticiasFirebase.sort((a, b) => (b.data || 0) - (a.data || 0));
+
+        if (snapshot.metadata.fromCache) {
+            avisar(`[Cache] ${nomeColecao} carregado.`);
+        } else {
+            avisar(`[Nuvem] ${nomeColecao} sincronizado.`);
+        }
+
+        if (!linkProcessado) window.verificarGatilhoDeLink();
+        
+    }, (error) => {
+        avisar(`❌ Erro Firebase (${nomeColecao})`);
+        console.error(error);
+    });
 }
 
-window.limparBuscaGlobal = limparTudo;
+const colecoesParaMonitorar = ["noticias", "lancamentos", "analises", "entrevistas", "podcast", "futebol"];
+colecoesParaMonitorar.forEach(nome => sincronizarComBusca(nome));
 
-// Fecha a gaveta se clicar fora
-document.addEventListener('click', (e) => {
-    if (!e.target.closest('.search-bar-wrapper')) {
-        if (drawerSugestoes) drawerSugestoes.classList.remove('active');
-    }
-});
+window.addEventListener('popstate', window.verificarGatilhoDeLink);
+
+avisar("🔥 Firebase: Sincronização Inteligente Ativa");

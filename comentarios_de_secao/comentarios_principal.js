@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: comentarios_de_secao/comentarios_principal.js
  * PAPEL: Módulo Global Autônomo de Comentários
- * VERSÃO: 6.0 - Isolamento de Eventos e Local Listening
+ * VERSÃO: 6.2 - Injeção no Body + Diagnóstico Mobile de Alerta
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -18,7 +18,7 @@ window.secaoComentarios = {
         if (!modal) {
             Interface.injetarEstruturaModal();
             modal = document.getElementById('modal-comentarios-global');
-            configurarListenersLocais(modal); // Configura o "vigia" apenas dentro do modal
+            configurarListenersLocais(modal);
         }
         
         Funcoes.toggleComentarios(true, id);
@@ -53,26 +53,38 @@ const db = getFirestore(app);
 let unsubscribeAtual = null;
 let idConteudoAtual = null;
 
-// 🛡️ NOVO: Listener focado apenas no elemento do Modal (Não usa mais o document.click global)
+/**
+ * CONFIGURAÇÃO DE LISTENERS (Com Alerta de Teste para Mobile)
+ */
 function configurarListenersLocais(modalElement) {
     if (!modalElement) return;
 
+    // 🚨 TESTE DE EMERGÊNCIA SOLICITADO
+    const btnFechar = modalElement.querySelector('#btn-fechar-comentarios');
+    if (btnFechar) {
+        btnFechar.addEventListener('click', (e) => {
+            // Se este alert aparecer no seu celular, o clique está sendo lido!
+            alert("O botão X foi clicado! Se o modal não fechar agora, o erro é na função toggle de visibilidade.");
+            
+            e.preventDefault();
+            e.stopPropagation();
+            window.secaoComentarios.fechar();
+        });
+    }
+
+    // Listener para o fundo do modal (overlay) e cliques internos
     modalElement.addEventListener('click', (e) => {
         const target = e.target;
         
-        // Verifica se clicou em botões de fechar ou no fundo (overlay)
-        const fecharAcionado = target.closest('.modal-close-trigger') || 
-                               target.closest('#btn-fechar-comentarios') ||
-                               target.classList.contains('modal-comentarios-overlay');
-
-        if (fecharAcionado) {
+        // Se clicar no fundo escuro (fora da caixa branca)
+        if (target.classList.contains('modal-comentarios-overlay')) {
             e.preventDefault();
-            e.stopPropagation(); // Trava o evento aqui dentro
+            e.stopPropagation();
             window.secaoComentarios.fechar();
             return;
         }
 
-        // Verifica envio
+        // Botão de enviar
         if (target.closest('#btn-enviar-comentario') || target.closest('#btn-enviar-global')) {
             e.preventDefault();
             e.stopPropagation();
@@ -80,7 +92,6 @@ function configurarListenersLocais(modalElement) {
         }
     });
 
-    // Listener para o campo de texto (específico)
     const input = modalElement.querySelector('#input-novo-comentario');
     if (input) {
         input.addEventListener('keypress', (e) => {
@@ -126,7 +137,7 @@ async function enviarComentario() {
     }
 }
 
-// Injeção inicial e configuração de listeners se o modal já existir
+// Inicialização garantida no Body
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         Interface.injetarEstruturaModal();

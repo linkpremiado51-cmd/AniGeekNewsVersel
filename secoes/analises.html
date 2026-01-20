@@ -18,7 +18,7 @@
   </div>
 
   <div id="novo-pagination-modulo" class="container-carregar-mais">
-      </div>
+    </div>
   
   <div id="toast-copiado">Link copiado para a área de transferência!</div>
 
@@ -27,6 +27,8 @@
     .destaque-wrapper {
       padding-top: 20px;
       min-height: 100vh;
+      position: relative;
+      /* Removido transforms para não criar novos contextos de empilhamento */
     }
 
     .capa-editorial-block { 
@@ -60,7 +62,6 @@
       font-size: 1.1rem;
     }
     
-    /* Estilo do Botão de Paginação */
     .btn-paginacao-geek { 
       display: inline-flex;
       align-items: center; 
@@ -87,19 +88,25 @@
       bottom: 30px; 
       left: 50%; 
       transform: translateX(-50%); 
-      background: var(--nyt-black); 
+      background: #111; 
       color: white; 
       padding: 12px 25px; 
-      border-radius: 4px; 
+      border-radius: 50px; /* Mais moderno */
       opacity: 0; 
+      visibility: hidden; /* Garante que não capture cliques quando invisível */
       transition: 0.3s; 
-      z-index: 10000; 
+      z-index: 5000; /* Reduzido para não brigar com modais */
       font-weight: 700;
-      font-size: 13px;
+      font-size: 12px;
+      border: 1px solid #333;
+      pointer-events: none; /* Crucial: o toast nunca deve bloquear cliques */
     }
-    #toast-copiado.mostrar { opacity: 1; bottom: 40px; }
+    #toast-copiado.mostrar { 
+      opacity: 1; 
+      bottom: 40px; 
+      visibility: visible;
+    }
 
-    /* Grid de Análises */
     .feed-analises-grid {
       display: flex;
       flex-direction: column;

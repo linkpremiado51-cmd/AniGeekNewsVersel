@@ -5,8 +5,7 @@
     <div class="capa-content-inner">
       <h1 id="capa-titulo" class="capa-title">Análises Profundas</h1>
       <p id="capa-descricao" class="capa-desc">Explorações detalhadas sobre a cultura pop e tecnologia.</p>
-      <div class="subcategorias-tags" id="subcategorias-container">
-        </div>
+      <div class="subcategorias-tags" id="subcategorias-container"></div>
     </div>
   </div>
 
@@ -17,18 +16,27 @@
     </div>
   </div>
 
-  <div id="novo-pagination-modulo" class="container-carregar-mais">
-    </div>
+  <div id="comentarios-secao-integrada" class="comentarios-secao-integrada"></div>
+
+  <div id="novo-pagination-modulo" class="container-carregar-mais"></div>
   
   <div id="toast-copiado">Link copiado para a área de transferência!</div>
 
   <style>
-    /* Ajustes Finos de Layout para a Seção de Análises */
     .destaque-wrapper {
       padding-top: 20px;
       min-height: 100vh;
-      /* 🛡️ Alterado para static para não sequestrar o contexto de empilhamento do modal global */
       position: static; 
+    }
+
+    /* 🛡️ Novo estilo para os comentários integrados */
+    .comentarios-secao-integrada {
+      max-width: var(--container-w);
+      margin: 0 auto;
+      padding: 0 20px;
+      /* Impede que o modal "suma" ou embaçe a tela inteira */
+      position: relative; 
+      z-index: 50;
     }
 
     .capa-editorial-block { 
@@ -81,8 +89,6 @@
       box-shadow: 0 8px 20px rgba(138, 43, 226, 0.3);
     }
 
-    .btn-paginacao-geek:active { transform: scale(0.95); }
-    
     #toast-copiado { 
       position: fixed; 
       bottom: 30px; 
@@ -95,7 +101,6 @@
       opacity: 0; 
       visibility: hidden; 
       transition: 0.3s; 
-      /* 🛡️ Z-index reduzido para nunca sobrepor o modal global (que usa 999.999) */
       z-index: 1000; 
       font-weight: 700;
       font-size: 12px;
@@ -116,7 +121,6 @@
       max-width: var(--container-w);
       margin: 0 auto;
       padding: 0 20px;
-      /* 🛡️ Garante que o grid não esconda elementos fixos */
       overflow: visible; 
     }
   </style>

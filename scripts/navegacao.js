@@ -1,10 +1,9 @@
 /**
  * ARQUIVO: scripts/navegacao.js
- * PAPEL: Orquestrador de Infraestrutura (SPA) e Navegação via Modal
- * VERSÃO: 3.5.0 - Singleton e Blindagem de Eventos (Arquitetura Pro)
+ * PAPEL: Orquestrador de Infraestrutura (SPA) e Integração de Busca
+ * VERSÃO: 3.6.0 - Suporte a Gaveta de Busca e Filtro de Feed
  */
 
-// 🛡️ PILAR 1: Trava Singleton - Impede que listeners sejam duplicados ao reinjetar o script
 if (window.__NAV_SPA_INICIALIZADO__) {
     if (window.logVisual) window.logVisual("⚠️ Orquestrador já ativo. Evitando duplicação.");
 } else {
@@ -18,13 +17,24 @@ if (window.__NAV_SPA_INICIALIZADO__) {
     }
 
     /**
-     * Carrega dinamicamente o feed de uma seção (HTML + CSS + Módulo JS).
+     * Listener de Busca: Quando o usuário digita, o SPA filtra o feed principal
+     */
+    window.addEventListener('busca:termo', (e) => {
+        const termo = e.detail.termo;
+        if (window.logVisual) window.logVisual(`SPA: Filtrando feed por "${termo}"`);
+        
+        // Se estivermos na seção de análises, avisamos o módulo para filtrar os cards
+        const moduloAtivo = document.getElementById('script-modulo-ativo');
+        if (moduloAtivo && typeof window.filtrarCardsPorBusca === 'function') {
+            window.filtrarCardsPorBusca(termo);
+        }
+    });
+
+    /**
+     * Carrega dinamicamente o feed de uma seção
      */
     async function carregarSecao(nome) {
-        if (!displayPrincipal) {
-            if (window.logVisual) window.logVisual("❌ Erro: Container principal ausente.");
-            return;
-        }
+        if (!displayPrincipal) return;
 
         if (window.logVisual) window.logVisual(`🔄 Trocando para: ${nome.toUpperCase()}`);
 
@@ -64,7 +74,6 @@ if (window.__NAV_SPA_INICIALIZADO__) {
                 if (typeof window.inicializarSecao === 'function') {
                     const root = displayPrincipal.querySelector(`[data-root="${nome}"]`) || displayPrincipal;
                     window.inicializarSecao(root, { modo: 'lista', origem: nome });
-                    if (window.logVisual) window.logVisual(`✅ Módulo ${nome} carregado.`);
                 }
             };
 
@@ -72,7 +81,6 @@ if (window.__NAV_SPA_INICIALIZADO__) {
             scrollTopo();
 
         } catch (err) {
-            console.error(`❌ Erro SPA:`, err);
             displayPrincipal.innerHTML = `<div style="text-align:center; padding:100px;">Erro ao carregar módulo.</div>`;
         }
     }
@@ -81,16 +89,18 @@ if (window.__NAV_SPA_INICIALIZADO__) {
      * Delegação de Eventos Centralizada
      */
     document.addEventListener('click', (e) => {
-        // 🛡️ PILAR 2: Zona de Exclusão (Data Attribute para Modais)
-        // Se o clique vier de qualquer elemento que tenha o atributo de modal global, ignora totalmente.
-        if (e.target.closest('[data-global-modal]') || 
-            e.target.closest('#modal-comentarios-global') || 
-            e.target.closest('#modal-noticia-global')) {
+        const target = e.target;
+
+        // 🛡️ AJUSTE NA BLINDAGEM: Adicionado suporte para a gaveta de busca
+        if (target.closest('[data-global-modal]') || 
+            target.closest('#modal-comentarios-global') || 
+            target.closest('#modal-noticia-global') ||
+            target.closest('#search-suggestions-drawer')) { // ⬅️ Permite cliques na gaveta sem resetar o SPA
             return; 
         }
 
-        const tag = e.target.closest('.filter-tag');
-        const menuLink = e.target.closest('.nav-item a');
+        const tag = target.closest('.filter-tag');
+        const menuLink = target.closest('.nav-item a');
 
         if (tag || menuLink) {
             let secaoId;
@@ -105,8 +115,9 @@ if (window.__NAV_SPA_INICIALIZADO__) {
             }
 
             if (secaoId) {
-                if (['manchetes', 'analises', 'smartphones', 'tecnologia'].includes(secaoId)) {
-                    carregarSecao(secaoId);
+                const s = secaoId.replace('ã', 'a').replace('é', 'e'); // normalização simples
+                if (['manchetes', 'analises', 'smartphones', 'tecnologia', 'entrevistas'].includes(s)) {
+                    carregarSecao(s);
                 }
             }
         }

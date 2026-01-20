@@ -1,16 +1,16 @@
 /**
  * ARQUIVO: comentarios_de_secao/comentarios_interface.js
  * PAPEL: Gerador de Interface Dinâmica para o Módulo de Comentários
- * VERSÃO: 5.3 - Implementação de Zona de Exclusão (data-global-modal)
+ * VERSÃO: 6.0 - Injeção Estática em Body (Fundo da Página)
  */
 
 /**
  * Cria a estrutura base do modal no DOM se ela não existir.
+ * Injeta diretamente no final do body para isolamento total do SPA.
  */
 export function injetarEstruturaModal() {
     if (document.getElementById('modal-comentarios-global')) return;
 
-    // 🛡️ Adicionado data-global-modal="true" para blindagem contra o orquestrador SPA
     const modalHTML = `
         <div id="modal-comentarios-global" class="modal-comentarios-overlay" data-global-modal="true">
             <div class="modal-comentarios-content" data-global-modal="true">
@@ -46,8 +46,10 @@ export function injetarEstruturaModal() {
         </div>
     `;
 
+    // 🛡️ Garante injeção no final do body, fora de qualquer container dinâmico
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    if (window.logVisual) window.logVisual("Interface: Modal injetado com Zona de Exclusão.");
+    
+    if (window.logVisual) window.logVisual("Interface: Modal injetado no fundo da página (Body).");
 }
 
 /**
@@ -71,7 +73,7 @@ export function criarBalaoComentario(autor, texto) {
 }
 
 /**
- * Recebe o array do Firebase e renderiza no container de fluxo
+ * Renderiza no container de fluxo
  */
 export function renderizarListaComentarios(comentarios) {
     const listaContainer = document.getElementById('lista-comentarios-fluxo');
@@ -92,11 +94,7 @@ export function renderizarListaComentarios(comentarios) {
         return criarBalaoComentario(autor, texto);
     }).join('');
 
-    // Rola para o final da conversa
     setTimeout(() => {
-        listaContainer.scrollTo({ 
-            top: listaContainer.scrollHeight, 
-            behavior: 'smooth' 
-        });
+        listaContainer.scrollTo({ top: listaContainer.scrollHeight, behavior: 'smooth' });
     }, 100);
 }

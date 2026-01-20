@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: comentarios_de_secao/comentarios_principal.js
  * PAPEL: Módulo Global Autônomo de Comentários
- * VERSÃO: 5.3 - Reforço na Lógica de Fechamento e Delegação
+ * VERSÃO: 5.4 - Diagnóstico de Clique e Rastreamento de Eventos
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -26,9 +26,14 @@ window.secaoComentarios = {
         if (window.logVisual) window.logVisual("[API] Fechando modal.");
         if (unsubscribeAtual) unsubscribeAtual();
         idConteudoAtual = null;
-        Funcoes.toggleComentarios(false);
         
-        // Garante que o scroll do corpo volte ao normal caso tenha travado
+        // Verifica se a função de toggle existe e é chamada
+        if (Funcoes.toggleComentarios) {
+            Funcoes.toggleComentarios(false);
+        } else {
+            if (window.logVisual) window.logVisual("❌ Erro: Função toggleComentarios não encontrada.");
+        }
+        
         document.body.style.overflow = '';
     },
     enviar: () => enviarComentario()
@@ -84,24 +89,35 @@ async function enviarComentario() {
     }
 }
 
-// Inicia a injeção da interface
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => Interface.injetarEstruturaModal());
 } else {
     Interface.injetarEstruturaModal();
 }
 
-// Escuta de cliques globais (Ajustada para máxima compatibilidade)
+// Escuta de cliques globais com LOGS DE DIAGNÓSTICO
 document.addEventListener('click', (e) => {
-    // Alvos de fechamento: Botão X, ID específico ou clicar no fundo (overlay)
-    const isCloseBtn = e.target.closest('.btn-close-comentarios') || 
-                      e.target.closest('#btn-fechar-comentarios') ||
-                      e.target.closest('.modal-close-trigger'); // Nova classe de segurança
+    const target = e.target;
+    
+    // Log detalhado para o console e logVisual
+    const selectorDesc = target.id ? `#${target.id}` : (target.className ? `.${target.className.split(' ')[0]}` : target.tagName);
+    
+    // Verifica se o clique foi em elementos de fechar
+    const closeBtn = target.closest('.btn-close-comentarios') || 
+                     target.closest('#btn-fechar-comentarios') ||
+                     target.closest('.modal-close-trigger');
 
-    const isOverlay = e.target.classList.contains('modal-comentarios-overlay');
+    const isOverlay = target.classList.contains('modal-comentarios-overlay');
 
-    if (isCloseBtn || isOverlay) {
+    if (closeBtn) {
+        if (window.logVisual) window.logVisual(`[Debug] Clique no botão fechar: ${selectorDesc}`);
         window.secaoComentarios.fechar();
+    } else if (isOverlay) {
+        if (window.logVisual) window.logVisual("[Debug] Clique no fundo (overlay)");
+        window.secaoComentarios.fechar();
+    } else {
+        // Log para qualquer outro clique apenas se necessário debugar camadas
+        // console.log("Clique em:", selectorDesc);
     }
 
     if (e.target.closest('#btn-enviar-comentario') || e.target.closest('#btn-enviar-global')) {
@@ -115,4 +131,4 @@ document.addEventListener('keypress', (e) => {
     }
 });
 
-if (window.logVisual) window.logVisual("✔️ Módulo Comentários Sincronizado.");
+if (window.logVisual) window.logVisual("✔️ Diagnóstico de Comentários Ativo.");

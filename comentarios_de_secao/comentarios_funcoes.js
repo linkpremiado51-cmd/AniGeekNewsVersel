@@ -1,12 +1,9 @@
 /**
  * ARQUIVO: comentarios_de_secao/comentarios_funcoes.js
- * PAPEL: Controle de Visibilidade e UI do Modal
- * VERSÃO: 6.1 - Fechamento Forçado (Correção Pós-Diagnóstico)
+ * PAPEL: Controle de Visibilidade com Fechamento Atômico
+ * VERSÃO: 6.5 - Kill Switch Instantâneo (Anti-Lag)
  */
 
-/**
- * Controla a exibição do modal de comentários com verificação de estado
- */
 export function toggleComentarios(abrir = true, idConteudo = null) {
     const modal = document.getElementById('modal-comentarios-global');
     
@@ -22,43 +19,39 @@ export function toggleComentarios(abrir = true, idConteudo = null) {
             modal.dataset.idAtual = idConteudo;
         }
 
-        // 1. Estado Inicial Forçado
+        // Força a exibição imediata
         modal.style.setProperty('display', 'flex', 'important');
         modal.style.opacity = '1';
         modal.style.visibility = 'visible';
-        modal.style.pointerEvents = 'auto'; // Garante que receba cliques
+        modal.style.pointerEvents = 'auto';
         
-        // 2. Reflow
         void modal.offsetWidth; 
-
-        // 3. Ativação
         modal.classList.add('active');
         
-        // Trava o scroll global
         document.documentElement.style.overflow = 'hidden';
         document.body.style.overflow = 'hidden'; 
 
     } else {
-        if (window.logVisual) window.logVisual("[UI] Fechando...");
+        // 🛡️ FECHAMENTO ATÔMICO: Mata o modal no exato milissegundo do clique
+        if (window.logVisual) window.logVisual("[UI] Fechando instantaneamente...");
         
-        // 1. Remove a classe active e mata os eventos de ponteiro imediatamente
+        // 1. Remove a classe de animação
         modal.classList.remove('active');
+
+        // 2. CORREÇÃO CRÍTICA: Aplica display none NA HORA (sem setTimeout)
+        // Isso impede que o modal fique "fantasma" ou embaçado na tela
+        modal.style.setProperty('display', 'none', 'important');
+        modal.style.opacity = '0';
+        modal.style.visibility = 'hidden';
         modal.style.pointerEvents = 'none';
 
-        // 2. Libera o scroll global NA HORA
+        // 3. Libera o scroll global imediatamente
         document.documentElement.style.overflow = '';
         document.body.style.overflow = ''; 
-
-        // 3. Desligamento Atômico
-        // Usamos display 'none' após um tempo mínimo apenas para a transição
-        setTimeout(() => {
-            if (!modal.classList.contains('active')) {
-                modal.style.setProperty('display', 'none', 'important');
-                modal.style.visibility = 'hidden';
-                modal.dataset.idAtual = ""; 
-                if (window.logVisual) window.logVisual("🌑 Modal fechado com sucesso.");
-            }
-        }, 100); // 100ms é imperceptível mas suficiente para o navegador processar
+        
+        modal.dataset.idAtual = ""; 
+        
+        if (window.logVisual) window.logVisual("🌑 Modal destruído visualmente.");
     }
 }
 

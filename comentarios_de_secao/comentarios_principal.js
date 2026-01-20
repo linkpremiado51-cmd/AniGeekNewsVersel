@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: comentarios_de_secao/comentarios_principal.js
- * PAPEL: Módulo Global Autônomo de Comentários
- * VERSÃO: 6.3 - Produção (Sem Alertas) + Injeção no Body
+ * PAPEL: Módulo de Comentários Integrado (Mesma Tela)
+ * VERSÃO: 7.0 - Kill Switch de Sobreposição e Injeção em Container
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -12,20 +12,21 @@ import * as Funcoes from './comentarios_funcoes.js';
 // --- INICIALIZAÇÃO DA API GLOBAL ---
 window.secaoComentarios = {
     abrir: (id) => {
-        if (window.logVisual) window.logVisual(`[API] Abrindo modal para: ${id}`);
+        if (window.logVisual) window.logVisual(`[UI] Integrando comentários para: ${id}`);
         
-        let modal = document.getElementById('modal-comentarios-global');
-        if (!modal) {
-            Interface.injetarEstruturaModal();
-            modal = document.getElementById('modal-comentarios-global');
+        // 🛡️ MUDANÇA: Injetamos DENTRO do container de conteúdo, não no body
+        Interface.injetarEstruturaModal(); 
+        
+        const modal = document.getElementById('modal-comentarios-global');
+        if (modal) {
             configurarListenersLocais(modal);
+            // 🛡️ O toggle agora apenas mostra/esconde a seção na mesma tela
+            Funcoes.toggleComentarios(true, id);
+            carregarComentariosRealTime(id);
         }
-        
-        Funcoes.toggleComentarios(true, id);
-        carregarComentariosRealTime(id);
     },
     fechar: () => {
-        if (window.logVisual) window.logVisual("[API] Fechando modal.");
+        if (window.logVisual) window.logVisual("[UI] Removendo seção de comentários da tela.");
         if (unsubscribeAtual) unsubscribeAtual();
         idConteudoAtual = null;
         
@@ -36,6 +37,7 @@ window.secaoComentarios = {
     enviar: () => enviarComentario()
 };
 
+// Config Firebase (Preservado)
 const firebaseConfig = {
     apiKey: "AIzaSyBC_ad4X9OwCHKvcG_pNQkKEl76Zw2tu6o",
     authDomain: "anigeeknews.firebaseapp.com",
@@ -52,43 +54,41 @@ let unsubscribeAtual = null;
 let idConteudoAtual = null;
 
 /**
- * CONFIGURAÇÃO DE LISTENERS LOCAIS (Isolamento de Eventos)
+ * CONFIGURAÇÃO DE LISTENERS LOCAIS
+ * 🛡️ Reforçado para cliques dentro da mesma página
  */
 function configurarListenersLocais(modalElement) {
-    if (!modalElement) return;
+    if (!modalElement || modalElement.dataset.listenersAtivos === "true") return;
 
     modalElement.addEventListener('click', (e) => {
         const target = e.target;
         
-        // Identifica botões de fechar ou clique no overlay (fundo escuro)
-        const fecharAcionado = target.closest('.modal-close-trigger') || 
-                               target.closest('#btn-fechar-comentarios') ||
-                               target.classList.contains('modal-comentarios-overlay');
+        // Clique no botão fechar (X)
+        const btnFechar = target.closest('.btn-close-comentarios') || target.closest('.modal-close-trigger');
 
-        if (fecharAcionado) {
+        if (btnFechar) {
             e.preventDefault();
-            e.stopPropagation(); // Impede o "borbulhamento" para o orquestrador SPA
+            e.stopPropagation(); 
             window.secaoComentarios.fechar();
             return;
         }
 
-        // Identifica clique no botão de enviar
-        if (target.closest('#btn-enviar-comentario') || target.closest('#btn-enviar-global')) {
+        // Clique no botão enviar
+        if (target.closest('.btn-enviar-comentario') || target.closest('#btn-enviar-global')) {
             e.preventDefault();
             e.stopPropagation();
             window.secaoComentarios.enviar();
         }
     });
 
-    // Listener para o campo de texto
     const input = modalElement.querySelector('#input-novo-comentario');
     if (input) {
         input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                window.secaoComentarios.enviar();
-            }
+            if (e.key === 'Enter') window.secaoComentarios.enviar();
         });
     }
+
+    modalElement.dataset.listenersAtivos = "true";
 }
 
 async function carregarComentariosRealTime(idConteudo) {
@@ -112,8 +112,7 @@ async function enviarComentario() {
 
     const texto = input.value.trim();
     const nomeAutor = window.AniGeekUser?.nome || "Leitor Geek";
-    input.value = ""; 
-
+    
     try {
         const colRef = collection(db, "analises", idConteudoAtual, "comentarios");
         await addDoc(colRef, {
@@ -121,20 +120,8 @@ async function enviarComentario() {
             texto: texto,
             data: serverTimestamp()
         });
+        input.value = ""; 
     } catch (error) {
         if (window.logVisual) window.logVisual("❌ Erro ao enviar.");
     }
-}
-
-// Injeção inicial em Body para garantir contexto global
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        Interface.injetarEstruturaModal();
-        const modal = document.getElementById('modal-comentarios-global');
-        configurarListenersLocais(modal);
-    });
-} else {
-    Interface.injetarEstruturaModal();
-    const modal = document.getElementById('modal-comentarios-global');
-    configurarListenersLocais(modal);
 }

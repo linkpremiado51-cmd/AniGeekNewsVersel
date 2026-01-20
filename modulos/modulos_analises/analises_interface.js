@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: modulos/modulos_analises/analises_interface.js
- * PAPEL: Renderização Visual das Análises
- * VERSÃO: 5.1 - Correção de Escopo de Variáveis e UX de Comentários
+ * PAPEL: Renderização Visual das Análises (Barra de Ações Premium)
+ * VERSÃO: 5.2 - Inclusão de Sistema de Like e UX de Compartilhamento
  */
 
 import { limparEspacos } from './analises_funcoes.js';
@@ -38,14 +38,10 @@ function criarRelacionadosHtml(newsId, relacionados) {
     `).join('');
 }
 
-/**
- * Renderiza o botão de paginação baseado na contagem real
- */
 export function renderizarBotaoPaginacao(total, limite) {
     const paginationWrapper = document.getElementById('novo-pagination-modulo');
     if (!paginationWrapper) return;
 
-    // Se o total de notícias for menor ou igual ao que já mostramos, remove o botão
     if (total <= limite) {
         paginationWrapper.innerHTML = "";
         return;
@@ -68,7 +64,6 @@ export function renderizarNoticias(noticias, limite, termoBusca = "") {
     const listaParaExibir = noticias.slice(0, limite);
     const totalDisponivel = noticias.length;
 
-    // Feedback visual para busca vazia
     if (termoBusca && listaParaExibir.length === 0) {
         container.innerHTML = `
             <div style="text-align:center; padding:80px 20px; color:var(--text-muted);">
@@ -126,13 +121,21 @@ export function renderizarNoticias(noticias, limite, termoBusca = "") {
           </div>
 
           <div class="premium-actions-bar">
-            <button class="btn-premium-icon" onclick="if(window.analises) window.analises.compartilharNoticia('${news.titulo.replace(/'/g, "\\'")}', '${shareUrl}')">
-              <i class="fa-solid fa-share-nodes"></i> 
-              <span>Compartilhar</span>
-            </button>
+            <div class="actions-left">
+                <button class="btn-action-premium btn-like" onclick="this.classList.toggle('active'); if(window.logVisual && this.classList.contains('active')) window.logVisual('❤️ Você curtiu esta análise!');">
+                  <i class="fa-solid fa-heart"></i>
+                  <span>Curtir</span>
+                </button>
+
+                <button class="btn-action-premium btn-share" onclick="if(window.analises) window.analises.compartilharNoticia('${news.titulo.replace(/'/g, "\\'")}', '${shareUrl}')">
+                  <i class="fa-solid fa-share-nodes"></i> 
+                  <span>Compartilhar</span>
+                </button>
+            </div>
+
             <div class="stats-group">
                 <i class="fa-solid fa-chart-line"></i>
-                <span class="stats-num">${viewCount} visualizações</span>
+                <span class="stats-num">${viewCount} views</span>
             </div>
           </div>
 
@@ -166,6 +169,5 @@ export function renderizarNoticias(noticias, limite, termoBusca = "") {
       `;
     }).join('');
 
-    // Chama a paginação passando os valores corretos
     renderizarBotaoPaginacao(totalDisponivel, limite);
 }

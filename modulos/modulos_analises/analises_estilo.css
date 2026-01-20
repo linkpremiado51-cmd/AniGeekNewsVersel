@@ -122,10 +122,10 @@ body.dark-mode {
   background: var(--bg);
   border: 1px solid var(--border);
   color: var(--text-main);
-  padding: 10px 20px; /* Ajustado para formato de pílula */
+  padding: 10px 20px; 
   border-radius: 50px;
   font-size: 13px;
-  font-weight: 800; /* Fonte mais forte igual às abas */
+  font-weight: 800; 
   text-transform: uppercase;
   letter-spacing: 0.5px;
   display: flex;
@@ -139,14 +139,12 @@ body.dark-mode {
   transform: scale(0.9);
 }
 
-/* Estilo específico do botão CURTIR */
 .btn-like.active {
   color: #fff;
   background: var(--like-color);
   border-color: var(--like-color);
 }
 
-/* Estilo específico do botão COMPARTILHAR */
 .btn-share:hover {
   background: var(--text-main);
   color: var(--card-bg);
@@ -187,9 +185,8 @@ body.dark-mode {
 .thumb-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 8px; overflow: hidden; margin-bottom: 8px; background: #000; }
 .tema-thumb { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; }
 
-/* Título do vídeo ajustado estilo Ficha Técnica */
 .tema-titulo { 
-    font-size: 11px; /* Fonte pequena igual a label da ficha */
+    font-size: 11px; 
     font-weight: 700; 
     color: var(--text-main); 
     line-height: 1.3;
@@ -197,7 +194,7 @@ body.dark-mode {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    text-transform: uppercase; /* Para combinar com o estilo técnico */
+    text-transform: uppercase; 
     letter-spacing: 0.3px;
     opacity: 0.9;
 }
@@ -237,7 +234,7 @@ body.dark-mode {
 }
 
 /* ======================================================
-   RESPONSIVIDADE
+   RESPONSIVIDADE E CORREÇÃO DE MODAL
 ====================================================== */
 @media (max-width: 768px) {
   .destaque-titulo { font-size: 24px; }
@@ -246,7 +243,13 @@ body.dark-mode {
   .destaque-padding { padding: 20px; }
   .premium-actions-bar { padding: 15px 20px; }
   
-  /* Mantém o formato pílula mas ajusta ícones no mobile */
   .btn-action-premium span { display: none; } 
   .btn-action-premium { padding: 12px; border-radius: 50%; width: 45px; height: 45px; justify-content: center; }
+
+  /* 🛡️ REMOÇÃO DO EMBAÇADO (Backdrop-filter) QUE TRAVA O MOBILE */
+  .modal-comentarios-overlay {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      background: rgba(0, 0, 0, 0.85) !important;
+  }
 }

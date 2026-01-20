@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: comentarios_de_secao/comentarios_principal.js
- * PAPEL: Módulo Global Autônomo de Comentários (Com Registro de API Ultra-Rápido)
- * VERSÃO: 5.2 - Correção de Inicialização Global
+ * PAPEL: Módulo Global Autônomo de Comentários
+ * VERSÃO: 5.3 - Reforço na Lógica de Fechamento e Delegação
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -9,14 +9,13 @@ import { getFirestore, collection, onSnapshot, query, orderBy, addDoc, serverTim
 import * as Interface from './comentarios_interface.js';
 import * as Funcoes from './comentarios_funcoes.js';
 
-// --- INICIALIZAÇÃO DA API GLOBAL (Executa antes de tudo) ---
+// --- INICIALIZAÇÃO DA API GLOBAL ---
 window.secaoComentarios = {
     abrir: (id) => {
         if (window.logVisual) window.logVisual(`[API] Abrindo modal para: ${id}`);
         
         const modalExiste = document.getElementById('modal-comentarios-global');
         if (!modalExiste) {
-            if (window.logVisual) window.logVisual("[Interface] Criando estrutura modal...");
             Interface.injetarEstruturaModal();
         }
         
@@ -28,6 +27,9 @@ window.secaoComentarios = {
         if (unsubscribeAtual) unsubscribeAtual();
         idConteudoAtual = null;
         Funcoes.toggleComentarios(false);
+        
+        // Garante que o scroll do corpo volte ao normal caso tenha travado
+        document.body.style.overflow = '';
     },
     enviar: () => enviarComentario()
 };
@@ -51,45 +53,34 @@ async function carregarComentariosRealTime(idConteudo) {
     if (unsubscribeAtual) unsubscribeAtual();
     idConteudoAtual = idConteudo;
 
-    if (window.logVisual) window.logVisual(`[Firebase] Conectando: ${idConteudo}`);
-    
-    // IMPORTANTE: Verifique se sua coleção no Firestore chama "analises" (minúsculo)
     const colRef = collection(db, "analises", idConteudo, "comentarios");
     const q = query(colRef, orderBy("data", "asc"));
 
     unsubscribeAtual = onSnapshot(q, (snapshot) => {
         const comentarios = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        if (window.logVisual) window.logVisual(`[Firebase] ${comentarios.length} mensagens.`);
         Interface.renderizarListaComentarios(comentarios);
     }, (error) => {
         if (window.logVisual) window.logVisual("❌ Erro Firebase: " + error.code);
-        console.error(error);
     });
 }
 
 async function enviarComentario() {
     const input = document.getElementById('input-novo-comentario');
-    if (!input || !input.value.trim() || !idConteudoAtual) {
-        if (window.logVisual) window.logVisual("⚠️ Campo vazio.");
-        return;
-    }
+    if (!input || !input.value.trim() || !idConteudoAtual) return;
 
     const texto = input.value.trim();
     const nomeAutor = window.AniGeekUser?.nome || "Leitor Geek";
     input.value = ""; 
 
     try {
-        if (window.logVisual) window.logVisual("📤 Enviando...");
         const colRef = collection(db, "analises", idConteudoAtual, "comentarios");
         await addDoc(colRef, {
             autor: nomeAutor,
             texto: texto,
             data: serverTimestamp()
         });
-        if (window.logVisual) window.logVisual("✅ Publicado!");
     } catch (error) {
         if (window.logVisual) window.logVisual("❌ Erro ao enviar.");
-        console.error(error);
     }
 }
 
@@ -100,10 +91,16 @@ if (document.readyState === 'loading') {
     Interface.injetarEstruturaModal();
 }
 
-// Escuta de cliques globais
+// Escuta de cliques globais (Ajustada para máxima compatibilidade)
 document.addEventListener('click', (e) => {
-    const fecharBtn = e.target.closest('.btn-close-comentarios') || e.target.id === 'btn-fechar-comentarios';
-    if (fecharBtn || e.target.classList.contains('modal-comentarios-overlay')) {
+    // Alvos de fechamento: Botão X, ID específico ou clicar no fundo (overlay)
+    const isCloseBtn = e.target.closest('.btn-close-comentarios') || 
+                      e.target.closest('#btn-fechar-comentarios') ||
+                      e.target.closest('.modal-close-trigger'); // Nova classe de segurança
+
+    const isOverlay = e.target.classList.contains('modal-comentarios-overlay');
+
+    if (isCloseBtn || isOverlay) {
         window.secaoComentarios.fechar();
     }
 
@@ -118,4 +115,4 @@ document.addEventListener('keypress', (e) => {
     }
 });
 
-if (window.logVisual) window.logVisual("✔️ Módulo Comentários Ativado.");
+if (window.logVisual) window.logVisual("✔️ Módulo Comentários Sincronizado.");

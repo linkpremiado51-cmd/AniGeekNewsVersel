@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: scripts/navegacao.js
  * PAPEL: Orquestrador de Infraestrutura (SPA) e Navegação via Modal
- * VERSÃO: 3.4 - Compatibilidade com Logs Visuais e Persistência de UI
+ * VERSÃO: 3.6 - Correção de Navegação e Proteção de Modal
  */
 
 const displayPrincipal = document.getElementById('dynamic-content'); 
@@ -27,7 +27,11 @@ async function carregarSecao(nome) {
         window.fecharModalNoticia();
     }
 
-    // Feedback visual de carregamento
+    // Fecha modal de comentários se estiver aberto ao trocar de aba
+    if (window.secaoComentarios && window.secaoComentarios.fechar) {
+        window.secaoComentarios.fechar();
+    }
+
     displayPrincipal.innerHTML = `
         <div style="text-align: center; padding: 120px; color: var(--text-muted);">
             <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 24px; margin-bottom: 15px; color: var(--primary);"></i>
@@ -37,24 +41,20 @@ async function carregarSecao(nome) {
     try {
         window.inicializarSecao = null; 
 
-        // 1. Busca o Shell HTML da seção
         const response = await fetch(`./secoes/${nome}.html`);
         if (!response.ok) throw new Error(`Arquivo ${nome}.html não encontrado.`);
         
         const htmlBase = await response.text();
         displayPrincipal.innerHTML = htmlBase;
 
-        // 2. Limpeza de Scripts de Módulo Anteriores
         const scriptId = `script-modulo-ativo`;
         const antigo = document.getElementById(scriptId);
         if (antigo) antigo.remove();
 
-        // 3. Injeção do Módulo JS
         const novoScript = document.createElement("script");
         novoScript.id = scriptId;
         novoScript.type = "module";
         
-        // Mapeamento dinâmico ajustado
         let pastaModulo = nome;
         if (nome === 'analises') pastaModulo = 'modulos_analises';
         
@@ -65,8 +65,6 @@ async function carregarSecao(nome) {
                 const root = displayPrincipal.querySelector(`[data-root="${nome}"]`) || displayPrincipal;
                 window.inicializarSecao(root, { modo: 'lista', origem: nome });
                 if (window.logVisual) window.logVisual(`✅ Módulo ${nome} carregado.`);
-            } else {
-                if (window.logVisual) window.logVisual(`⚠️ window.inicializarSecao não definida em ${nome}.`);
             }
         };
 
@@ -79,11 +77,7 @@ async function carregarSecao(nome) {
 
     } catch (err) {
         console.error(`❌ Erro SPA:`, err);
-        displayPrincipal.innerHTML = `
-            <div style="text-align:center; padding:100px; color: var(--text-main);">
-                <i class="fa-solid fa-triangle-exclamation" style="font-size: 40px; margin-bottom:15px; color: var(--primary);"></i><br>
-                O módulo <strong>${nome}</strong> não pôde ser carregado no momento.
-            </div>`;
+        displayPrincipal.innerHTML = `<div style="text-align:center; padding:100px;">Erro ao carregar o módulo.</div>`;
     }
 }
 
@@ -91,6 +85,9 @@ async function carregarSecao(nome) {
  * Delegação de Eventos para Filtros e Menu
  */
 document.addEventListener('click', (e) => {
+    // 🛡️ PROTEÇÃO: Se o clique for dentro do modal de comentários, não faz nada aqui.
+    if (e.target.closest('#modal-comentarios-global')) return;
+
     const tag = e.target.closest('.filter-tag');
     const menuLink = e.target.closest('.nav-item a');
 
@@ -107,15 +104,13 @@ document.addEventListener('click', (e) => {
         }
 
         if (secaoId) {
-            // Normalização de nomes para as seções físicas
-            if (secaoId === 'manchetes' || secaoId === 'analises' || secaoId === 'smartphones' || secaoId === 'tecnologia') {
-                carregarSecao(secaoId);
-            }
+            // Normalização: Remove acentos e espaços para bater com os nomes dos arquivos
+            const nomeLimpo = secaoId.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            carregarSecao(nomeLimpo);
         }
     }
 });
 
-// Inicialização
 window.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     const secaoInicial = params.get('tab') || 'manchetes';

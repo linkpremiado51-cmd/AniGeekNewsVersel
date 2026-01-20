@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: comentarios_de_secao/comentarios_principal.js
  * PAPEL: Módulo Global Autônomo de Comentários
- * VERSÃO: 6.2 - Injeção no Body + Diagnóstico Mobile de Alerta
+ * VERSÃO: 6.3 - Produção (Sem Alertas) + Injeção no Body
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -32,8 +32,6 @@ window.secaoComentarios = {
         if (Funcoes.toggleComentarios) {
             Funcoes.toggleComentarios(false);
         }
-        
-        document.body.style.overflow = '';
     },
     enviar: () => enviarComentario()
 };
@@ -54,37 +52,27 @@ let unsubscribeAtual = null;
 let idConteudoAtual = null;
 
 /**
- * CONFIGURAÇÃO DE LISTENERS (Com Alerta de Teste para Mobile)
+ * CONFIGURAÇÃO DE LISTENERS LOCAIS (Isolamento de Eventos)
  */
 function configurarListenersLocais(modalElement) {
     if (!modalElement) return;
 
-    // 🚨 TESTE DE EMERGÊNCIA SOLICITADO
-    const btnFechar = modalElement.querySelector('#btn-fechar-comentarios');
-    if (btnFechar) {
-        btnFechar.addEventListener('click', (e) => {
-            // Se este alert aparecer no seu celular, o clique está sendo lido!
-            alert("O botão X foi clicado! Se o modal não fechar agora, o erro é na função toggle de visibilidade.");
-            
-            e.preventDefault();
-            e.stopPropagation();
-            window.secaoComentarios.fechar();
-        });
-    }
-
-    // Listener para o fundo do modal (overlay) e cliques internos
     modalElement.addEventListener('click', (e) => {
         const target = e.target;
         
-        // Se clicar no fundo escuro (fora da caixa branca)
-        if (target.classList.contains('modal-comentarios-overlay')) {
+        // Identifica botões de fechar ou clique no overlay (fundo escuro)
+        const fecharAcionado = target.closest('.modal-close-trigger') || 
+                               target.closest('#btn-fechar-comentarios') ||
+                               target.classList.contains('modal-comentarios-overlay');
+
+        if (fecharAcionado) {
             e.preventDefault();
-            e.stopPropagation();
+            e.stopPropagation(); // Impede o "borbulhamento" para o orquestrador SPA
             window.secaoComentarios.fechar();
             return;
         }
 
-        // Botão de enviar
+        // Identifica clique no botão de enviar
         if (target.closest('#btn-enviar-comentario') || target.closest('#btn-enviar-global')) {
             e.preventDefault();
             e.stopPropagation();
@@ -92,6 +80,7 @@ function configurarListenersLocais(modalElement) {
         }
     });
 
+    // Listener para o campo de texto
     const input = modalElement.querySelector('#input-novo-comentario');
     if (input) {
         input.addEventListener('keypress', (e) => {
@@ -137,7 +126,7 @@ async function enviarComentario() {
     }
 }
 
-// Inicialização garantida no Body
+// Injeção inicial em Body para garantir contexto global
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         Interface.injetarEstruturaModal();

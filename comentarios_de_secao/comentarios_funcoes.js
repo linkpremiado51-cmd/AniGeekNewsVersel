@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: comentarios_de_secao/comentarios_funcoes.js
  * PAPEL: Controle de Visibilidade e UI do Modal
- * VERSÃO: 5.3 - Ajuste de Resiliência no Fechamento
+ * VERSÃO: 6.0 - Fechamento Atômico (Anti-Glitch Mobile)
  */
 
 /**
@@ -22,34 +22,42 @@ export function toggleComentarios(abrir = true, idConteudo = null) {
             modal.dataset.idAtual = idConteudo;
         }
 
-        // Garante que o display esteja ativo antes da classe active
+        // 1. Força o estado inicial
         modal.style.display = 'flex';
+        modal.style.opacity = '0';
         
-        // Força o reflow para garantir que a animação CSS ocorra
+        // 2. Reflow
         void modal.offsetWidth; 
 
+        // 3. Ativa
         modal.classList.add('active');
+        modal.style.opacity = '1';
+        
+        // Trava o scroll do site ao fundo
+        document.documentElement.style.overflow = 'hidden';
         document.body.style.overflow = 'hidden'; 
 
-        if (window.logVisual) window.logVisual("✨ Interface pronta.");
     } else {
         if (window.logVisual) window.logVisual("[UI] Fechando...");
         
-        // Remove a classe de animação primeiro
+        // 1. Remove classes de estado IMEDIATAMENTE
         modal.classList.remove('active');
-        
-        // Reset imediato do scroll do corpo para evitar travamentos
+        modal.style.opacity = '0';
+
+        // 2. Libera o scroll IMEDIATAMENTE (Não espera o timer)
+        document.documentElement.style.overflow = '';
         document.body.style.overflow = ''; 
 
-        // Aguarda a transição do CSS (0.3s) e força o sumiço
+        // 3. O "Golpe de Misericórdia": 
+        // Em vez de esperar 300ms, vamos garantir que ele suma da árvore de renderização
+        // Mas damos 150ms apenas para o olho humano ver a saída
         setTimeout(() => {
-            // Se o modal ainda não foi reaberto nesse meio tempo, escondemos
             if (!modal.classList.contains('active')) {
                 modal.style.display = 'none';
                 modal.dataset.idAtual = ""; 
-                if (window.logVisual) window.logVisual("🌑 Modal fechado.");
+                if (window.logVisual) window.logVisual("🌑 Modal destruído visualmente.");
             }
-        }, 300); // Reduzido para 300ms para ser mais responsivo
+        }, 150); 
     }
 }
 

@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: comentarios_de_secao/comentarios_principal.js
  * PAPEL: Módulo Global Autônomo de Comentários
- * VERSÃO: 5.4 - Diagnóstico de Clique e Rastreamento de Eventos
+ * VERSÃO: 5.5 - Correção Crítica de Propagação (Anti-Vazamento SPA)
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -27,11 +27,8 @@ window.secaoComentarios = {
         if (unsubscribeAtual) unsubscribeAtual();
         idConteudoAtual = null;
         
-        // Verifica se a função de toggle existe e é chamada
         if (Funcoes.toggleComentarios) {
             Funcoes.toggleComentarios(false);
-        } else {
-            if (window.logVisual) window.logVisual("❌ Erro: Função toggleComentarios não encontrada.");
         }
         
         document.body.style.overflow = '';
@@ -95,40 +92,36 @@ if (document.readyState === 'loading') {
     Interface.injetarEstruturaModal();
 }
 
-// Escuta de cliques globais com LOGS DE DIAGNÓSTICO
+// Escuta de cliques globais com INTERRUPÇÃO DE PROPAGAÇÃO
 document.addEventListener('click', (e) => {
     const target = e.target;
     
-    // Log detalhado para o console e logVisual
-    const selectorDesc = target.id ? `#${target.id}` : (target.className ? `.${target.className.split(' ')[0]}` : target.tagName);
-    
-    // Verifica se o clique foi em elementos de fechar
+    // Identifica elementos de fechar
     const closeBtn = target.closest('.btn-close-comentarios') || 
                      target.closest('#btn-fechar-comentarios') ||
                      target.closest('.modal-close-trigger');
 
     const isOverlay = target.classList.contains('modal-comentarios-overlay');
 
-    if (closeBtn) {
-        if (window.logVisual) window.logVisual(`[Debug] Clique no botão fechar: ${selectorDesc}`);
+    if (closeBtn || isOverlay) {
+        // 🛑 ESSENCIAL: Mata o evento para que o navegacao.js não o veja
+        e.preventDefault();
+        e.stopPropagation(); 
+        
+        if (window.logVisual) window.logVisual(`[Sistema] Fechamento seguro acionado.`);
         window.secaoComentarios.fechar();
-    } else if (isOverlay) {
-        if (window.logVisual) window.logVisual("[Debug] Clique no fundo (overlay)");
-        window.secaoComentarios.fechar();
-    } else {
-        // Log para qualquer outro clique apenas se necessário debugar camadas
-        // console.log("Clique em:", selectorDesc);
+        return; // Sai da função imediatamente
     }
 
     if (e.target.closest('#btn-enviar-comentario') || e.target.closest('#btn-enviar-global')) {
+        e.preventDefault();
+        e.stopPropagation();
         window.secaoComentarios.enviar();
     }
-});
+}, true); // Captura antecipada
 
 document.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && e.target.id === 'input-novo-comentario') {
         window.secaoComentarios.enviar();
     }
 });
-
-if (window.logVisual) window.logVisual("✔️ Diagnóstico de Comentários Ativo.");

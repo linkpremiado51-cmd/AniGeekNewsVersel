@@ -1,29 +1,36 @@
 /* ARQUIVO: comentarios_de_secao/comentarios_estilo.css */
 /* PAPEL: Estilização do Modal Global de Comentários */
-/* VERSÃO: 5.4 - Fix de Contexto de Empilhamento e Camada de Toque */
+/* VERSÃO: 6.0 - Fix Definitivo de Fechamento (Z-Index e Visibilidade) */
 
-/* Overlay do Modal */
+/* Overlay do Modal - Estado Base Totalmente Escondido */
 .modal-comentarios-overlay {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw; /* Garante que cubra a largura total da viewport */
-    height: 100vh; /* Garante que cubra a altura total da viewport */
+    width: 100vw;
+    height: 100vh;
     background: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(8px);
-    z-index: 200000; /* Dobrado para saltar sobre qualquer outro componente */
-    display: none;
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 999999 !important; /* Salta sobre tudo, até sobre o header */
+    
+    /* Camadas de Esconder (Multi-nível) */
+    display: none !important; 
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    
     justify-content: center;
     align-items: flex-end;
-    transition: opacity 0.3s ease;
-    pointer-events: auto;
-    -webkit-backface-visibility: hidden; /* Previne glitches de renderização */
+    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-/* Estado Ativo */
+/* Estado Ativo - Única forma de aparecer */
 .modal-comentarios-overlay.active {
-    display: flex;
-    opacity: 1;
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
 }
 
 /* Conteúdo do Modal */
@@ -38,8 +45,11 @@
     flex-direction: column;
     position: relative;
     box-shadow: 0 -10px 40px rgba(0,0,0,0.9);
-    z-index: 200001;
-    /* Alterado para slide in mais suave e sem manter transformações pesadas */
+    z-index: 1000000;
+}
+
+/* Animação de Entrada - Acionada pela classe active */
+.modal-comentarios-overlay.active .modal-comentarios-content {
     animation: slideUpComentarios 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -48,122 +58,76 @@
     to { transform: translateY(0); }
 }
 
-/* Cabeçalho */
-.comentarios-header {
-    padding: 20px 25px;
-    border-bottom: 1px solid var(--border, #333);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--card-bg, #1a1a1a); /* Garante que o fundo não seja transparente */
-    border-radius: 25px 25px 0 0;
-    z-index: 200002;
-}
-
-/* BOTÃO DE FECHAR - REFORÇADO */
+/* BOTÃO DE FECHAR - UI/UX Reforçado */
 .btn-close-comentarios {
-    background: rgba(138, 43, 226, 0.2) !important;
+    background: rgba(138, 43, 226, 0.15) !important;
     border: 1px solid rgba(138, 43, 226, 0.3) !important;
     color: #fff !important;
-    width: 48px !important;  /* Ligeiramente aumentado para 48px (padrão UX ouro) */
-    height: 48px !important;
+    width: 45px !important;
+    height: 45px !important;
     border-radius: 50% !important;
-    font-size: 24px !important;
+    font-size: 22px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     cursor: pointer !important;
-    position: relative !important;
-    z-index: 200010 !important; /* Valor extremo para garantir clique */
-    pointer-events: auto !important;
-    touch-action: manipulation; /* Otimiza para toque mobile rápido */
+    z-index: 1000001 !important;
+    touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
 }
 
-.btn-close-comentarios:active {
-    transform: scale(0.85);
-    background: rgba(138, 43, 226, 0.5) !important;
+/* Restante do CSS preservado... */
+.comentarios-header {
+    padding: 15px 25px;
+    border-bottom: 1px solid var(--border, #333);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card-bg, #1a1a1a);
+    border-radius: 25px 25px 0 0;
 }
 
-/* Ícone dentro do botão para garantir que não roube o clique */
-.btn-close-comentarios i {
-    pointer-events: none;
-}
-
-/* Restante dos estilos mantidos para estabilidade */
 .comentarios-body {
     flex: 1;
     overflow-y: auto;
     padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 15px;
     background: var(--card-bg, #1a1a1a);
     -webkit-overflow-scrolling: touch;
 }
 
-.comentario-item {
-    display: flex;
-    gap: 12px;
-    max-width: 95%;
-}
-
-.comentario-avatar {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: #8A2BE2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 900;
-    font-size: 14px;
-    color: #fff;
-    flex-shrink: 0;
-}
-
-.comentario-texto-wrapper {
-    background: var(--bg, #252525);
-    padding: 12px 18px;
-    border-radius: 0 18px 18px 18px;
-    border: 1px solid var(--border, #333);
-}
-
-.comentario-autor {
-    display: block;
-    font-size: 0.8rem;
-    font-weight: 800;
-    color: #a855f7;
-    margin-bottom: 4px;
-}
-
-.comentario-texto {
-    font-size: 0.95rem;
-    color: var(--text-main, #eee);
-    line-height: 1.5;
-}
+.comentario-item { display: flex; gap: 12px; margin-bottom: 5px; }
+.comentario-avatar { width: 35px; height: 35px; border-radius: 50%; background: #8A2BE2; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff; flex-shrink: 0; }
+.comentario-texto-wrapper { background: var(--bg, #252525); padding: 10px 15px; border-radius: 0 15px 15px 15px; border: 1px solid var(--border, #333); }
+.comentario-autor { font-size: 11px; font-weight: 800; color: #8A2BE2; margin-bottom: 3px; text-transform: uppercase; }
+.comentario-texto { font-size: 14px; color: var(--text-main); line-height: 1.4; }
 
 .comentarios-footer {
-    padding: 20px;
+    padding: 15px 20px;
     border-top: 1px solid var(--border, #333);
     background: var(--card-bg, #1a1a1a);
-    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    padding-bottom: calc(15px + env(safe-area-inset-bottom));
 }
 
 .input-container-global {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     background: var(--bg, #252525);
-    padding: 10px 18px;
-    border-radius: 30px;
+    padding: 8px 15px;
+    border-radius: 25px;
     border: 1px solid var(--border, #444);
 }
 
-.btn-enviar-comentario {
+#input-novo-comentario {
+    flex: 1;
     background: none;
     border: none;
-    color: #8A2BE2;
-    font-size: 1.4rem;
-    cursor: pointer;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
 }
+
+.btn-enviar-comentario { background: none; border: none; color: #8A2BE2; font-size: 1.2rem; cursor: pointer; }

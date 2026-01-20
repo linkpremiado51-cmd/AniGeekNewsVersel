@@ -1,5 +1,5 @@
 /* ======================================================
-   VARIÁVEIS DE TEMA — ANIGEEKNEWS v7.1
+   VARIÁVEIS DE TEMA — ANIGEEKNEWS v7.2
 ====================================================== */
 :root {
   --card-bg: #ffffff;
@@ -9,7 +9,7 @@
   --text-muted: #555;
   --container-w: 1200px;
   --radius: 12px;
-  --like-color: #ff2d55; /* Cor de curtir (iOS style) */
+  --like-color: #ff2d55;
 }
 
 body.dark-mode {
@@ -101,7 +101,7 @@ body.dark-mode {
 }
 
 /* ======================================================
-   PREMIUM ACTION BAR (NOVOS BOTÕES)
+   PREMIUM ACTION BAR (ESTILO PÍLULA)
 ====================================================== */
 .premium-actions-bar {
   display: flex;
@@ -114,7 +114,7 @@ body.dark-mode {
 
 .actions-left {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   align-items: center;
 }
 
@@ -122,42 +122,35 @@ body.dark-mode {
   background: var(--bg);
   border: 1px solid var(--border);
   color: var(--text-main);
-  padding: 8px 16px;
+  padding: 10px 20px; /* Ajustado para formato de pílula */
   border-radius: 50px;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 800; /* Fonte mais forte igual às abas */
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .btn-action-premium:active {
-  transform: scale(0.92);
+  transform: scale(0.9);
 }
 
 /* Estilo específico do botão CURTIR */
 .btn-like.active {
-  color: var(--like-color);
-  background: rgba(255, 45, 85, 0.1);
+  color: #fff;
+  background: var(--like-color);
   border-color: var(--like-color);
-}
-
-.btn-like.active i {
-  animation: heartPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 /* Estilo específico do botão COMPARTILHAR */
 .btn-share:hover {
   background: var(--text-main);
   color: var(--card-bg);
-}
-
-@keyframes heartPop {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.4); }
-  100% { transform: scale(1); }
+  border-color: var(--text-main);
 }
 
 .stats-group { 
@@ -171,16 +164,47 @@ body.dark-mode {
 }
 
 /* ======================================================
-   PAGINAÇÃO E CARROSSEL (MANTIDOS)
+   VÍDEOS RELACIONADOS (FONTE AJUSTADA)
 ====================================================== */
-#novo-pagination-modulo {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  padding: 40px 0;
-  clear: both;
+.carrossel-temas { padding: 20px 0; border-top: 1px solid var(--border); }
+.carrossel-header { 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    padding: 0 25px 12px 25px; 
+    font-weight: 800; 
+    color: var(--text-main); 
+    font-size: 12px; 
+    text-transform: uppercase; 
+    opacity: 0.8; 
 }
 
+.temas-scroll-wrapper { width: 100%; overflow-x: auto; padding: 0 25px; scrollbar-width: none; }
+.temas-scroll-wrapper::-webkit-scrollbar { display: none; }
+.temas-container { display: flex; gap: 15px; width: max-content; }
+
+.tema-card { width: 150px; cursor: pointer; }
+.thumb-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 8px; overflow: hidden; margin-bottom: 8px; background: #000; }
+.tema-thumb { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; }
+
+/* Título do vídeo ajustado estilo Ficha Técnica */
+.tema-titulo { 
+    font-size: 11px; /* Fonte pequena igual a label da ficha */
+    font-weight: 700; 
+    color: var(--text-main); 
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-transform: uppercase; /* Para combinar com o estilo técnico */
+    letter-spacing: 0.3px;
+    opacity: 0.9;
+}
+
+/* ======================================================
+   PAGINAÇÃO E COMENTÁRIOS
+====================================================== */
 .btn-paginacao-geek {
   background: var(--text-main);
   color: var(--card-bg);
@@ -195,29 +219,10 @@ body.dark-mode {
   display: flex;
   align-items: center;
   gap: 10px;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.3s ease;
   box-shadow: 0 6px 15px rgba(0,0,0,0.15);
 }
 
-.btn-paginacao-geek:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-  filter: brightness(1.1);
-}
-
-.carrossel-temas { padding: 20px 0; border-top: 1px solid var(--border); }
-.carrossel-header { display: flex; align-items: center; gap: 8px; padding: 0 25px 12px 25px; font-weight: 800; color: var(--text-main); font-size: 13px; text-transform: uppercase; opacity: 0.8; }
-.temas-scroll-wrapper { width: 100%; overflow-x: auto; padding: 0 25px; scrollbar-width: none; }
-.temas-scroll-wrapper::-webkit-scrollbar { display: none; }
-.temas-container { display: flex; gap: 15px; width: max-content; }
-
-.tema-card { width: 160px; cursor: pointer; }
-.thumb-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 8px; overflow: hidden; margin-bottom: 8px; background: #000; }
-.tema-thumb { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; opacity: 0.9; }
-
-/* ======================================================
-   AÇÕES E COMENTÁRIOS
-====================================================== */
 .comments-trigger-bar {
   margin: 0 25px 25px 25px;
   background: var(--bg);
@@ -231,8 +236,6 @@ body.dark-mode {
   transition: 0.2s;
 }
 
-.comments-trigger-bar:hover { background: var(--border); }
-
 /* ======================================================
    RESPONSIVIDADE
 ====================================================== */
@@ -241,7 +244,9 @@ body.dark-mode {
   .destaque-info-grid { grid-template-columns: 1fr 1fr; }
   .btn-paginacao-geek { width: 90%; justify-content: center; }
   .destaque-padding { padding: 20px; }
-  .premium-actions-bar { padding: 15px 20px; flex-direction: row; }
-  .btn-action-premium span { display: none; } /* No mobile esconde o texto dos botões pequenos */
-  .btn-action-premium { padding: 10px 15px; font-size: 16px; } /* Aumenta o ícone no mobile */
+  .premium-actions-bar { padding: 15px 20px; }
+  
+  /* Mantém o formato pílula mas ajusta ícones no mobile */
+  .btn-action-premium span { display: none; } 
+  .btn-action-premium { padding: 12px; border-radius: 50%; width: 45px; height: 45px; justify-content: center; }
 }

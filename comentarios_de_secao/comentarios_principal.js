@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: comentarios_de_secao/comentarios_principal.js
  * PAPEL: Módulo Global Autônomo de Comentários
- * VERSÃO: 5.5 - Correção Crítica de Propagação (Anti-Vazamento SPA)
+ * VERSÃO: 6.0 - Isolamento de Eventos e Local Listening
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -14,9 +14,11 @@ window.secaoComentarios = {
     abrir: (id) => {
         if (window.logVisual) window.logVisual(`[API] Abrindo modal para: ${id}`);
         
-        const modalExiste = document.getElementById('modal-comentarios-global');
-        if (!modalExiste) {
+        let modal = document.getElementById('modal-comentarios-global');
+        if (!modal) {
             Interface.injetarEstruturaModal();
+            modal = document.getElementById('modal-comentarios-global');
+            configurarListenersLocais(modal); // Configura o "vigia" apenas dentro do modal
         }
         
         Funcoes.toggleComentarios(true, id);
@@ -50,6 +52,44 @@ const db = getFirestore(app);
 
 let unsubscribeAtual = null;
 let idConteudoAtual = null;
+
+// 🛡️ NOVO: Listener focado apenas no elemento do Modal (Não usa mais o document.click global)
+function configurarListenersLocais(modalElement) {
+    if (!modalElement) return;
+
+    modalElement.addEventListener('click', (e) => {
+        const target = e.target;
+        
+        // Verifica se clicou em botões de fechar ou no fundo (overlay)
+        const fecharAcionado = target.closest('.modal-close-trigger') || 
+                               target.closest('#btn-fechar-comentarios') ||
+                               target.classList.contains('modal-comentarios-overlay');
+
+        if (fecharAcionado) {
+            e.preventDefault();
+            e.stopPropagation(); // Trava o evento aqui dentro
+            window.secaoComentarios.fechar();
+            return;
+        }
+
+        // Verifica envio
+        if (target.closest('#btn-enviar-comentario') || target.closest('#btn-enviar-global')) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.secaoComentarios.enviar();
+        }
+    });
+
+    // Listener para o campo de texto (específico)
+    const input = modalElement.querySelector('#input-novo-comentario');
+    if (input) {
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                window.secaoComentarios.enviar();
+            }
+        });
+    }
+}
 
 async function carregarComentariosRealTime(idConteudo) {
     if (unsubscribeAtual) unsubscribeAtual();
@@ -86,42 +126,15 @@ async function enviarComentario() {
     }
 }
 
+// Injeção inicial e configuração de listeners se o modal já existir
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => Interface.injetarEstruturaModal());
+    document.addEventListener('DOMContentLoaded', () => {
+        Interface.injetarEstruturaModal();
+        const modal = document.getElementById('modal-comentarios-global');
+        configurarListenersLocais(modal);
+    });
 } else {
     Interface.injetarEstruturaModal();
+    const modal = document.getElementById('modal-comentarios-global');
+    configurarListenersLocais(modal);
 }
-
-// Escuta de cliques globais com INTERRUPÇÃO DE PROPAGAÇÃO
-document.addEventListener('click', (e) => {
-    const target = e.target;
-    
-    // Identifica elementos de fechar
-    const closeBtn = target.closest('.btn-close-comentarios') || 
-                     target.closest('#btn-fechar-comentarios') ||
-                     target.closest('.modal-close-trigger');
-
-    const isOverlay = target.classList.contains('modal-comentarios-overlay');
-
-    if (closeBtn || isOverlay) {
-        // 🛑 ESSENCIAL: Mata o evento para que o navegacao.js não o veja
-        e.preventDefault();
-        e.stopPropagation(); 
-        
-        if (window.logVisual) window.logVisual(`[Sistema] Fechamento seguro acionado.`);
-        window.secaoComentarios.fechar();
-        return; // Sai da função imediatamente
-    }
-
-    if (e.target.closest('#btn-enviar-comentario') || e.target.closest('#btn-enviar-global')) {
-        e.preventDefault();
-        e.stopPropagation();
-        window.secaoComentarios.enviar();
-    }
-}, true); // Captura antecipada
-
-document.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && e.target.id === 'input-novo-comentario') {
-        window.secaoComentarios.enviar();
-    }
-});

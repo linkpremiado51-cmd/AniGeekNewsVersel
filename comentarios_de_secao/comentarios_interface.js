@@ -1,23 +1,25 @@
 /**
  * ARQUIVO: comentarios_de_secao/comentarios_interface.js
  * PAPEL: Injeção Integrada (Mesma Tela) para evitar sobreposição e travamentos.
- * VERSÃO: 7.0 - Integração Direta no Container de Conteúdo.
+ * VERSÃO: 7.1 - Alinhamento com Container de Analises.html
  */
 
 /**
- * Cria a estrutura dos comentários dentro do container dinâmico.
- * Isso evita que o modal seja "algo à parte" e acabe com o efeito embaçado.
+ * Cria a estrutura dos comentários dentro do container específico da página.
  */
 export function injetarEstruturaModal() {
-    // 1. Procuramos o container principal do seu site (dynamic-content)
-    const containerPrincipal = document.getElementById('dynamic-content');
+    // 🛡️ MUDANÇA: Agora buscamos o container dedicado que criamos no analises.html
+    const containerDedicado = document.getElementById('comentarios-secao-integrada');
     
-    if (!containerPrincipal) {
-        console.error("Container #dynamic-content não encontrado para injetar comentários.");
+    // Fallback: se não achar o dedicado, tenta o dinâmico geral
+    const containerAlvo = containerDedicado || document.getElementById('dynamic-content');
+    
+    if (!containerAlvo) {
+        console.error("Alvo de injeção não encontrado.");
         return;
     }
 
-    // 2. Se já existir, não injetamos de novo
+    // Se já existir, não injetamos de novo
     if (document.getElementById('modal-comentarios-global')) return;
 
     const modalHTML = `
@@ -55,11 +57,10 @@ export function injetarEstruturaModal() {
         </div>
     `;
 
-    // 🛡️ MUDANÇA CHAVE: Injeta no container do conteúdo, não no body.
-    // Isso faz com que ele herde o contexto da página de análises.
-    containerPrincipal.insertAdjacentHTML('beforeend', modalHTML);
+    // Injeta no container alvo
+    containerAlvo.innerHTML = modalHTML;
     
-    if (window.logVisual) window.logVisual("Interface: Comentários integrados ao container de conteúdo.");
+    if (window.logVisual) window.logVisual("Interface: Seção de comentários injetada na mesma tela.");
 }
 
 /**

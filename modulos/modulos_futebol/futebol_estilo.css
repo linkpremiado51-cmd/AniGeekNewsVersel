@@ -1,18 +1,18 @@
-
 /* ======================================================
-   VARIÁVEIS DE TEMA — ANIGEEKNEWS v9.0
-   Foco: Identidade Dinâmica e Carrossel Cinemático
+   VARIÁVEIS DE TEMA — FUTEBOL v1.0
+   Foco: Estádio, Gramado e Cores de Clubes
 ====================================================== */
 :root {
   --card-bg: #ffffff;
   --border: #e0e0e0;
-  --bg: #f8f9fa;
+  --bg: #f4f7f4; /* Tom levemente esverdeado ao fundo */
   --text-main: #121212;
   --text-muted: #555;
   --container-w: 1200px;
   --radius: 12px;
   --radius-premium: 8px;
-  --accent-analysis: #8A2BE2;
+  --accent-futebol: #1a8f00; /* Verde Padrão */
+  --ease-editorial: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body.dark-mode {
@@ -24,7 +24,7 @@ body.dark-mode {
 }
 
 /* ======================================================
-   ESTRUTURA DO ARTIGO PREMIUM
+   ESTRUTURA DO ARTIGO DE FUTEBOL
 ====================================================== */
 .destaque-secao-premium {
   width: 100%;
@@ -35,11 +35,12 @@ body.dark-mode {
   border-radius: var(--radius);
   overflow: hidden;
   box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+  border-bottom: 4px solid var(--tema-cor, var(--accent-futebol));
 }
 
 .destaque-inner-layout { padding: 30px; }
 
-/* Tags e Categorias */
+/* Badges e Tags de Jogo */
 .top-meta-row { display: flex; justify-content: space-between; margin-bottom: 20px; }
 .badge-categoria {
   display: flex;
@@ -49,24 +50,24 @@ body.dark-mode {
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  color: var(--tema-cor);
+  color: var(--tema-cor, var(--accent-futebol));
 }
 .badge-categoria .dot {
-  width: 8px;
-  height: 8px;
-  background: var(--tema-cor);
+  width: 8px; height: 8px;
+  background: var(--tema-cor, var(--accent-futebol));
   border-radius: 50%;
-  box-shadow: 0 0 10px var(--tema-cor);
+  box-shadow: 0 0 10px var(--tema-cor, var(--accent-futebol));
 }
 
-/* Título e Botão de Artigo */
+/* Título e Botão de Matéria */
 .main-article-title { 
     font-size: clamp(1.8rem, 5vw, 2.8rem); 
     line-height: 1.1; 
     margin-bottom: 15px; 
     color: var(--text-main);
+    font-weight: 900;
 }
-.main-article-summary { font-size: 17px; color: var(--text-muted); margin-bottom: 25px; }
+.main-article-summary { font-size: 17px; color: var(--text-muted); margin-bottom: 25px; line-height: 1.6; }
 
 .btn-full-article {
     display: inline-flex;
@@ -74,17 +75,17 @@ body.dark-mode {
     gap: 10px;
     padding: 12px 24px;
     background: transparent;
-    border: 2px solid var(--tema-cor);
-    color: var(--tema-cor);
+    border: 2px solid var(--tema-cor, var(--accent-futebol));
+    color: var(--tema-cor, var(--accent-futebol));
     font-weight: 900;
     font-size: 12px;
     border-radius: 4px;
     transition: 0.3s;
     margin-bottom: 30px;
 }
-.btn-full-article:hover { background: var(--tema-cor); color: #fff; box-shadow: 0 5px 15px var(--tema-cor); }
+.btn-full-article:hover { background: var(--tema-cor, var(--accent-futebol)); color: #fff; }
 
-/* Ficha Técnica */
+/* Ficha Técnica (Escalação / Dados do Jogo) */
 .tech-specs-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -93,18 +94,22 @@ body.dark-mode {
     padding: 20px;
     border-radius: var(--radius-premium);
     margin-bottom: 30px;
-    border-top: 3px solid var(--tema-cor);
+    border-top: 3px solid var(--tema-cor, var(--accent-futebol));
 }
 
+.info-item { display: flex; flex-direction: column; }
+.info-label { font-size: 9px; text-transform: uppercase; font-weight: 700; color: #888; }
+.info-valor { font-size: 14px; font-weight: 800; color: var(--text-main); }
+
 /* ======================================================
-   VÍDEO PRINCIPAL (CINEMATIC WRAPPER)
+   VÍDEO / LANCES (CINEMATIC)
 ====================================================== */
 .main-video-frame { margin: 0 -30px 30px -30px; background: #000; }
 .video-ratio-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; }
 .video-ratio-wrapper iframe { position: absolute; top:0; left:0; width:100%; height:100%; border:none; }
 
 /* ======================================================
-   CARROSSEL CINEMÁTICO (ESTILO NETFLIX)
+   CARROSSEL DE VÍDEOS RELACIONADOS
 ====================================================== */
 .related-videos-section { padding-top: 30px; border-top: 1px solid var(--border); }
 .related-title { font-size: 13px; font-weight: 900; margin-bottom: 20px; letter-spacing: 1px; color: var(--text-main); }
@@ -122,78 +127,49 @@ body.dark-mode {
     transition: transform 0.4s var(--ease-editorial);
 }
 
-.thumb-container-16-9 {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16/9;
-}
-
-.video-thumb { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
+.video-thumb { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; opacity: 0.8; }
+.tema-card-premium:hover .video-thumb { transform: scale(1.1); opacity: 1; }
 
 .video-info-overlay {
     position: absolute;
     bottom: 0; left: 0; right: 0;
     padding: 15px;
     background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
-    backdrop-filter: blur(2px);
 }
 
-.video-rel-titulo { font-size: 12px; font-weight: 700; color: #fff; line-height: 1.3; }
+.video-rel-titulo { font-size: 11px; font-weight: 700; color: #fff; line-height: 1.3; }
 
-/* Play Indicator */
-.play-indicator {
+.badge-hd {
     position: absolute;
-    top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
-    width: 40px; height: 40px;
-    background: var(--tema-cor);
-    border-radius: 50%;
-    display: flex;
-    align-items: center; justify-content: center;
-    color: #fff; opacity: 0;
-    transition: 0.3s;
+    top: 10px; right: 10px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 900;
 }
-
-.tema-card-premium:hover .play-indicator { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-.tema-card-premium:hover .video-thumb { transform: scale(1.1); }
 
 /* ======================================================
-   INTERAÇÃO E COMUNIDADE
+   BOTÃO CARREGAR MAIS (ESTILO FUTEBOL)
 ====================================================== */
-.premium-interaction-bar {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 30px;
-    padding: 15px 0;
-}
-
-.action-trigger {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    padding: 10px 18px;
+.btn-paginacao-futebol {
+    background: var(--accent-futebol) !important;
+    color: #fff !important;
+    border: none;
+    padding: 16px 40px;
     border-radius: 50px;
-    font-size: 12px;
     font-weight: 800;
-    color: var(--text-main);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
     cursor: pointer;
-    transition: 0.2s;
-}
-
-.action-trigger:hover { border-color: var(--tema-cor); color: var(--tema-cor); }
-.like-trigger.active { background: var(--tema-cor); border-color: var(--tema-cor); color: #fff; }
-
-.community-trigger-modern {
-    background: var(--bg);
-    padding: 18px 25px;
-    border-radius: var(--radius-premium);
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    margin-top: 30px;
+    margin: 40px auto;
+    transition: 0.3s;
+    box-shadow: 0 8px 20px rgba(26, 143, 0, 0.3);
 }
-
-.community-trigger-modern:hover { border-color: var(--tema-cor); }
+.btn-paginacao-futebol:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(26, 143, 0, 0.4); }
 
 /* ======================================================
    RESPONSIVIDADE
@@ -201,6 +177,5 @@ body.dark-mode {
 @media (max-width: 768px) {
     .destaque-inner-layout { padding: 20px; }
     .main-video-frame { margin: 0 -20px 20px -20px; }
-    .tema-card-premium { flex: 0 0 180px; }
-    .action-trigger span { display: none; }
+    .tema-card-premium { flex: 0 0 190px; }
 }

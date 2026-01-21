@@ -1,14 +1,13 @@
 /* =========================================================
    HEADER — ANI GEEK NEWS | CORPORATE MEDIA STANDARD
-   Inspired by Bloomberg, IGN, NYTimes Tech cabecalho-rodape.css
+   Inspired by Bloomberg, IGN, NYTimes Tech
 ========================================================= */
 
+/* 🛡️ CORREÇÃO: Removi o sticky daqui para evitar conflito com o wrapper do index.html */
 .sticky-header-group {
-    position: sticky;
-    top: 0;
-    z-index: 5000;
     background: var(--card-bg);
     border-bottom: 1px solid var(--border);
+    /* O sticky agora é controlado pelo container no index.html para agrupar tudo */
 }
 
 /* Ajuste para o Log Visual não colidir com o Header fixo */
@@ -19,6 +18,8 @@
 /* Header */
 header {
     background: var(--card-bg);
+    position: relative;
+    z-index: 5001; /* Garante que o menu fique acima da barra de busca */
 }
 
 /* ======================================================
@@ -99,7 +100,6 @@ header {
     gap: 12px;
 }
 
-/* Botões executivos */
 .sections-btn,
 .menu-toggle {
     background: transparent;
@@ -112,7 +112,6 @@ header {
     color: var(--text-main);
 }
 
-/* Hover */
 .sections-btn:hover,
 .menu-toggle:hover {
     border-color: var(--primary);
@@ -122,55 +121,55 @@ header {
 /* ======================================================
    MOBILE TOGGLE
 ====================================================== */
-.menu-toggle {
-    display: none;
+@media (max-width: 900px) {
+    .nav-menu { display: none; }
+    .menu-toggle { 
+        display: block; 
+        border-radius: 4px;
+    }
 }
 
 /* ======================================================
-   MOBILE MENU
+   MOBILE MENU (GAVETA)
 ====================================================== */
 .mobile-menu {
     position: fixed;
-    top: var(--header-h);
+    top: 0; /* Mudei para 0 para cobrir a tela toda se necessário */
     right: -100%;
-    width: 100%;
-    height: calc(100vh - var(--header-h));
+    width: 85%; /* Um pouco menor para ver o fundo */
+    height: 100vh;
     background: var(--card-bg);
     z-index: 6000;
-    padding: 30px;
+    padding: 60px 30px 30px;
     overflow-y: auto;
-    transition: 0.35s ease;
+    transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: -10px 0 30px rgba(0,0,0,0.3);
 }
 
 .mobile-menu.active {
     right: 0;
 }
 
-/* ======================================================
-   MOBILE ITEMS
-====================================================== */
 .mobile-menu-item {
     padding: 16px 0;
     border-bottom: 1px solid var(--border);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     letter-spacing: 1px;
     text-transform: uppercase;
     color: var(--text-main);
 }
 
-/* ======================================================
-   CLOSE BUTTON
-====================================================== */
 .close-menu {
     position: absolute;
     top: 20px;
     right: 20px;
     background: transparent;
     border: 1px solid var(--border);
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     font-size: 18px;
+    color: var(--text-main);
     cursor: pointer;
 }
 
@@ -184,17 +183,10 @@ header {
     font-weight: 700;
     cursor: pointer;
     transition: 0.2s;
+    color: var(--text-main);
 }
 
 .btn-voltar-estilizado:hover {
     border-color: var(--primary);
     color: var(--primary);
-}
-
-/* ======================================================
-   MOBILE
-====================================================== */
-@media (max-width: 900px) {
-    .nav-menu { display: none; }
-    .menu-toggle { display: block; }
 }

@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: modulos/modulos_analises/analises_interface.js
- * PAPEL: Renderização Visual das Análises (Barra de Ações Premium)
- * VERSÃO: 6.0 - Proteção de Ciclo de Vida e Validação de Container
+ * PAPEL: Renderização Visual das Análises
+ * VERSÃO: 7.0 - Fix de Injeção em SPA e Unificação de CSS
  */
 
 import { limparEspacos } from './analises_funcoes.js';
@@ -11,6 +11,8 @@ function logInterface(msg) {
         window.logVisual(`[Interface] ${msg}`);
     }
 }
+
+// ... (Funções criarFichaHtml e criarRelacionadosHtml permanecem iguais) ...
 
 export function criarFichaHtml(ficha) {
     if (!ficha || !Array.isArray(ficha)) return "";
@@ -39,18 +41,29 @@ function criarRelacionadosHtml(newsId, relacionados) {
 }
 
 export function renderizarBotaoPaginacao(total, limite) {
-    const paginationWrapper = document.getElementById('novo-pagination-modulo');
-    // 🛡️ Validação de Ciclo de Vida: Se o elemento não existe, o módulo pode estar sendo desmontado.
-    if (!paginationWrapper) return;
+    // 🛡️ CORREÇÃO SPA: Se o wrapper específico sumiu, injetamos no final do dynamic-content
+    let paginationWrapper = document.getElementById('novo-pagination-modulo');
+    
+    if (!paginationWrapper) {
+        const dynamicMain = document.getElementById('dynamic-content');
+        if (!dynamicMain) return;
+
+        // Cria o wrapper dinamicamente se ele não existir
+        paginationWrapper = document.createElement('div');
+        paginationWrapper.id = 'novo-pagination-modulo';
+        paginationWrapper.className = 'container-carregar-mais';
+        dynamicMain.appendChild(paginationWrapper);
+    }
 
     if (total <= limite) {
         paginationWrapper.innerHTML = "";
         return;
     }
 
+    // 🛡️ UNIFICAÇÃO DE CLASSE: Usando as duas classes para garantir o estilo do geral.css
     paginationWrapper.innerHTML = `
-        <div style="text-align: center; padding: 20px 0 60px 0; width: 100%;">
-            <button class="btn-paginacao-geek" id="btn-carregar-mais">
+        <div style="text-align: center; padding: 20px 0 80px 0; width: 100%;">
+            <button class="btn-carregar-mais btn-paginacao-geek" id="btn-carregar-mais">
                 <i class="fa-solid fa-chevron-down"></i>
                 <span>Carregar mais análises</span>
             </button>
@@ -61,8 +74,6 @@ export function renderizarBotaoPaginacao(total, limite) {
 export function renderizarNoticias(noticias, limite, termoBusca = "") {
     const container = document.getElementById('container-principal');
     
-    // 🛡️ CRÍTICO: Se o container-principal sumiu, interrompemos a renderização imediatamente.
-    // Isso evita erros no console quando o usuário troca de seção rapidamente.
     if (!container) return;
 
     const listaParaExibir = noticias.slice(0, limite);
@@ -155,17 +166,13 @@ export function renderizarNoticias(noticias, limite, termoBusca = "") {
             </div>
           </div>
 
-          <div class="comments-trigger-bar" data-news-id="${news.id}" style="cursor: pointer;" 
-               onclick="if(window.secaoComentarios && window.secaoComentarios.abrir) { 
-                            window.secaoComentarios.abrir('${news.id}'); 
-                        } else { 
-                            if(window.logVisual) window.logVisual('⚠️ Sistema de comentários não disponível.');
-                        }">
-            <div class="trigger-left" style="display: flex; align-items: center; gap: 10px; color: var(--tema-cor); font-weight: 700; font-size: 0.85rem;">
+          <div class="comments-trigger-bar" data-news-id="${news.id}" 
+               onclick="if(window.secaoComentarios) window.secaoComentarios.abrir('${news.id}')">
+            <div class="trigger-left">
               <i class="fa-solid fa-circle-nodes"></i>
               <span>Ver discussão da comunidade...</span>
             </div>
-            <div class="trigger-right" style="color: var(--text-muted); font-size: 1.1rem;">
+            <div class="trigger-right">
                 <i class="fa-solid fa-comments"></i>
             </div>
           </div>

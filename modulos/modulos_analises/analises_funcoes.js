@@ -1,18 +1,19 @@
 /**
  * ARQUIVO: modulos/modulos_analises/analises_funcoes.js
  * PAPEL: Funções utilitárias e suporte visual otimizadas
- * VERSÃO: 4.2 - Correção de Embed e Sincronização de Modal
+ * VERSÃO: 5.0 - Fix Embed YouTube e Proteção de Estado de URL
  */
 
 /**
  * Remove espaços extras de strings
  */
 export function limparEspacos(texto) {
-    return texto ? texto.trim() : texto;
+    return (texto && typeof texto === 'string') ? texto.trim() : texto;
 }
 
 /**
  * Gerencia o sistema de cópia com feedback visual (Toast)
+ * 🛡️ Proteção: Verifica a existência do elemento antes de agir
  */
 export async function copiarLink(url) {
     try {
@@ -20,10 +21,15 @@ export async function copiarLink(url) {
         const toast = document.getElementById('toast-copiado');
         if (toast) {
             toast.classList.add('mostrar');
-            setTimeout(() => toast.classList.remove('mostrar'), 2500);
+            setTimeout(() => {
+                // Checagem extra: o elemento ainda existe no DOM?
+                if (document.getElementById('toast-copiado')) {
+                    toast.classList.remove('mostrar');
+                }
+            }, 2500);
         }
     } catch (err) {
-        console.error("Erro ao copiar link:", err);
+        console.error("[Util] Erro ao copiar link:", err);
     }
 }
 
@@ -35,7 +41,7 @@ export function compartilharNoticia(titulo, url) {
     
     if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
         navigator.share(shareData).catch(err => {
-            if (err.name !== 'AbortError') console.error(err);
+            if (err.name !== 'AbortError') console.error("[Util] Share:", err);
         });
     } else {
         copiarLink(url);
@@ -44,6 +50,7 @@ export function compartilharNoticia(titulo, url) {
 
 /**
  * Altera o SRC de um iframe de vídeo de forma dinâmica
+ * 🛠️ CORREÇÃO: URL de Embed do YouTube corrigida para padrão oficial
  */
 export function trocarVideo(idPlayer, idVideo) {
     const player = document.getElementById(idPlayer);
@@ -54,7 +61,7 @@ export function trocarVideo(idPlayer, idVideo) {
 
     // Lógica para transformar ID ou URL em Embed válido
     if (!idVideo.includes('http')) {
-        // CORREÇÃO: Usando o domínio oficial do YouTube Embed
+        // CORREÇÃO: Usando o domínio oficial de embed do YouTube
         novoSrc = `https://www.youtube.com/embed/${idVideo}`;
     } else if (idVideo.includes('watch?v=')) {
         novoSrc = idVideo.replace('watch?v=', 'embed/');
@@ -66,22 +73,27 @@ export function trocarVideo(idPlayer, idVideo) {
 
 /**
  * Gerencia o fechamento do modal e limpa a URL (ID da notícia)
+ * 🛡️ Evolução: Limpeza de URL agora é resiliente ao roteamento
  */
 export function fecharModalPrincipal() {
-    // Prioriza a função global do modal-manager.js
+    // 1. Executa o fechamento visual
     if (typeof window.fecharModalNoticia === 'function') {
         window.fecharModalNoticia();
     } else {
         const modal = document.getElementById('modal-noticia-global');
         if (modal) modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
+        document.body.style.overflow = ''; // Reseta para o padrão
     }
     
-    // Limpeza da URL para manter o estado da SPA limpo
-    const url = new URL(window.location);
-    if (url.searchParams.has('id')) {
-        url.searchParams.delete('id');
-        // Remove o ID da barra de endereços sem recarregar a página
-        window.history.pushState({}, '', url.pathname + url.search);
+    // 2. Limpeza da URL para manter o estado da SPA limpo
+    // Utilizamos replaceState para não "sujar" o histórico de voltar do usuário
+    try {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('id')) {
+            url.searchParams.delete('id');
+            window.history.replaceState({}, document.title, url.pathname + url.search);
+        }
+    } catch (e) {
+        console.warn("[Util] Falha ao limpar URL de estado.");
     }
 }

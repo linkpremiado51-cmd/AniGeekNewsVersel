@@ -49,6 +49,31 @@
         .suggestion-item:hover { background: rgba(138, 43, 226, 0.15); }
         .suggestion-item i { color: #8A2BE2; width: 20px; text-align: center; }
         .suggestion-title { font-size: 14px; font-weight: 600; color: var(--text-main, #fff); }
+
+        /* 🛡️ CORREÇÕES DE LAYOUT SPA */
+        .sticky-nav-group {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+        }
+
+        #dynamic-content {
+            min-height: 80vh;
+            display: block;
+            overflow: visible; /* Garante que o botão carregar mais não seja cortado */
+            padding-bottom: 60px; /* Espaço para o botão respirar no final */
+        }
+
+        /* Garante que o container de paginação injetado seja visível */
+        .container-carregar-mais {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 40px 0;
+            clear: both;
+        }
     </style>
 </head>
 
@@ -61,7 +86,7 @@
     <i class="fa-solid fa-check-circle"></i> Link copiado para a área de transferência!
 </div>
 
-<div class="sticky-header-group">
+<div class="sticky-nav-group">
     <header>
         <div class="nav-container">
             <a href="./index.html" class="logo">AniGeek<span>News</span></a>
@@ -99,14 +124,13 @@
 </main>
 
 <script type="module" src="scripts/config-firebase.js"></script>
-<script type="module" src="scripts/auth.js"></script> <script type="module" src="scripts/tema.js"></script>
+<script type="module" src="scripts/auth.js"></script> 
+<script type="module" src="scripts/tema.js"></script>
 <script type="module" src="scripts/modal-manager.js"></script>
 <script type="module" src="scripts/busca.js"></script>
 
 <script type="module" src="comentarios_de_secao/comentarios_principal.js"></script>
-
 <script type="module" src="scripts/navegacao.js"></script>
-
 <script src="scripts/recomendacao-secao.js"></script>
 
 <script type="module">

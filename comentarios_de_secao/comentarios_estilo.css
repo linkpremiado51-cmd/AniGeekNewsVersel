@@ -1,6 +1,6 @@
 /* ARQUIVO: comentarios_de_secao/comentarios_estilo.css */
 /* PAPEL: Estilização do Modal Global de Comentários */
-/* VERSÃO: 6.0 - Fix Definitivo de Fechamento (Z-Index e Visibilidade) */
+/* VERSÃO: 7.0 - Elite Auth-Sync + Fix de Fechamento */
 
 /* Overlay do Modal - Estado Base Totalmente Escondido */
 .modal-comentarios-overlay {
@@ -12,9 +12,8 @@
     background: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    z-index: 999999 !important; /* Salta sobre tudo, até sobre o header */
+    z-index: 999999 !important;
     
-    /* Camadas de Esconder (Multi-nível) */
     display: none !important; 
     opacity: 0 !important;
     visibility: hidden !important;
@@ -25,7 +24,7 @@
     transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-/* Estado Ativo - Única forma de aparecer */
+/* Estado Ativo */
 .modal-comentarios-overlay.active {
     display: flex !important;
     opacity: 1 !important;
@@ -48,7 +47,7 @@
     z-index: 1000000;
 }
 
-/* Animação de Entrada - Acionada pela classe active */
+/* Animação de Entrada */
 .modal-comentarios-overlay.active .modal-comentarios-content {
     animation: slideUpComentarios 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -58,7 +57,7 @@
     to { transform: translateY(0); }
 }
 
-/* BOTÃO DE FECHAR - UI/UX Reforçado */
+/* BOTÃO DE FECHAR */
 .btn-close-comentarios {
     background: rgba(138, 43, 226, 0.15) !important;
     border: 1px solid rgba(138, 43, 226, 0.3) !important;
@@ -72,11 +71,8 @@
     justify-content: center !important;
     cursor: pointer !important;
     z-index: 1000001 !important;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
 }
 
-/* Restante do CSS preservado... */
 .comentarios-header {
     padding: 15px 25px;
     border-bottom: 1px solid var(--border, #333);
@@ -95,15 +91,15 @@
     flex-direction: column;
     gap: 15px;
     background: var(--card-bg, #1a1a1a);
-    -webkit-overflow-scrolling: touch;
 }
 
-.comentario-item { display: flex; gap: 12px; margin-bottom: 5px; }
+.comentario-item { display: flex; gap: 12px; margin-bottom: 5px; animation: fadeIn 0.3s ease; }
 .comentario-avatar { width: 35px; height: 35px; border-radius: 50%; background: #8A2BE2; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff; flex-shrink: 0; }
 .comentario-texto-wrapper { background: var(--bg, #252525); padding: 10px 15px; border-radius: 0 15px 15px 15px; border: 1px solid var(--border, #333); }
 .comentario-autor { font-size: 11px; font-weight: 800; color: #8A2BE2; margin-bottom: 3px; text-transform: uppercase; }
 .comentario-texto { font-size: 14px; color: var(--text-main); line-height: 1.4; }
 
+/* FOOTER COM ESTADOS DE AUTH */
 .comentarios-footer {
     padding: 15px 20px;
     border-top: 1px solid var(--border, #333);
@@ -119,6 +115,31 @@
     padding: 8px 15px;
     border-radius: 25px;
     border: 1px solid var(--border, #444);
+    transition: 0.3s border-color;
+}
+
+/* 🛡️ REFLEXO DO ESTADO DE AUTH (LOGADO/DESLOGADO) */
+.modal-comentarios-input-area.user-deslogado .input-container-global {
+    opacity: 0.6;
+    background: #111;
+    border-style: dashed;
+    cursor: not-allowed;
+}
+
+.modal-comentarios-input-area.user-deslogado #input-novo-comentario {
+    pointer-events: none;
+}
+
+.modal-comentarios-input-area.user-deslogado::after {
+    content: "🔒 Entre para comentar";
+    display: block;
+    font-size: 10px;
+    text-align: center;
+    color: #8A2BE2;
+    font-weight: 800;
+    margin-top: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 #input-novo-comentario {
@@ -130,4 +151,15 @@
     outline: none;
 }
 
-.btn-enviar-comentario { background: none; border: none; color: #8A2BE2; font-size: 1.2rem; cursor: pointer; }
+.btn-enviar-comentario { 
+    background: none; 
+    border: none; 
+    color: #8A2BE2; 
+    font-size: 1.2rem; 
+    cursor: pointer; 
+    transition: 0.2s;
+}
+
+.btn-enviar-comentario:hover { transform: scale(1.2); }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

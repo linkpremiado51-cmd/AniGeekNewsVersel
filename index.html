@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AniGeekNews.com | Jornalismo Geek</title>
-    <meta name="description" content="Jornalismo independente sobre cultura pop, animes, games e cinema.">
-
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Cormorant+Garamond:wght@400;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
@@ -17,17 +16,15 @@
     <link rel="stylesheet" href="estilos/modal-pesquisa.css">
     
     <link rel="stylesheet" href="comentarios_de_secao/comentarios_estilo.css">
+    <link rel="stylesheet" href="modulos/modulos_analises/analises_estilo.css">
 
     <style>
-        /* 🛡️ ESTILOS DA GAVETA DE SUGESTÕES (Autocomplete) */
-        .search-bar-wrapper {
-            position: relative; /* Necessário para posicionar a gaveta */
-        }
-
+        /* Estilos da Gaveta de Sugestões (Autocomplete) */
+        .search-bar-wrapper { position: relative; }
         #search-suggestions-drawer {
             display: none;
             position: absolute;
-            top: 100%; /* Aparece colado abaixo da barra de busca */
+            top: 100%;
             left: 0;
             width: 100%;
             background: var(--card-bg, #1a1a1a);
@@ -39,11 +36,7 @@
             max-height: 350px;
             overflow-y: auto;
         }
-
-        #search-suggestions-drawer.active {
-            display: block;
-        }
-
+        #search-suggestions-drawer.active { display: block; }
         .suggestion-item {
             padding: 12px 20px;
             display: flex;
@@ -53,47 +46,10 @@
             transition: background 0.2s;
             border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-
-        .suggestion-item:last-child { border-bottom: none; }
-
-        .suggestion-item:hover {
-            background: rgba(138, 43, 226, 0.15); /* Destaque roxo suave */
-        }
-
-        .suggestion-item i {
-            color: #8A2BE2;
-            font-size: 0.9rem;
-            width: 20px;
-            text-align: center;
-        }
-
-        .suggestion-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .suggestion-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-main, #fff);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .suggestion-category {
-            font-size: 10px;
-            text-transform: uppercase;
-            color: var(--text-muted, #aaa);
-            letter-spacing: 0.5px;
-        }
-
-        /* Ajuste no surface original para não conflitar */
-        #search-results-surface {
-            margin-top: 10px;
-        }
+        .suggestion-item:hover { background: rgba(138, 43, 226, 0.15); }
+        .suggestion-item i { color: #8A2BE2; width: 20px; text-align: center; }
+        .suggestion-title { font-size: 14px; font-weight: 600; color: var(--text-main, #fff); }
     </style>
-    
 </head>
 
 <body>
@@ -101,17 +57,21 @@
 <div id="progress-bar"></div>
 <div id="megaMenuContainer"></div>
 
+<div id="toast-copiado" class="toast-aviso">
+    <i class="fa-solid fa-check-circle"></i> Link copiado para a área de transferência!
+</div>
+
 <div class="sticky-header-group">
     <header>
         <div class="nav-container">
-            <a href="./index.html" class="logo">ViNews.net<span></span></a>
+            <a href="./index.html" class="logo">AniGeek<span>News</span></a>
             <ul class="nav-menu">
-                <li class="nav-item"><a href="#">Animes</a></li>
-                <li class="nav-item"><a href="#">Games</a></li>
-                <li class="nav-item"><a href="#">Mangás</a></li>
-                <li class="nav-item" id="area-usuario"><span>Aguardando...</span></li>
+                <li class="nav-item"><a href="#" data-section="manchetes">Manchetes</a></li>
+                <li class="nav-item"><a href="#" data-section="analises">Análises</a></li>
+                <li class="nav-item"><a href="#" data-section="tecnologia">Tecnologia</a></li>
+                <li class="nav-item" id="area-usuario"></li> 
             </ul>
-            <button class="menu-toggle" onclick="abrirMegaMenu()" aria-label="Abrir menu">
+            <button class="menu-toggle" onclick="abrirMegaMenu()">
                 <i class="fas fa-bars"></i>
             </button>
         </div>
@@ -120,28 +80,26 @@
     <div class="search-bar-wrapper">
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="input-busca-global" placeholder="Pesquisar notícias, animes ou análises..." autocomplete="off">
+            <input type="text" id="input-busca-global" placeholder="Pesquisar notícias ou análises..." autocomplete="off">
         </div>
-
-        <div id="search-suggestions-drawer" class="suggestions-drawer"></div>
-
-        <div id="search-results-surface"></div>
+        <div id="search-suggestions-drawer"></div>
     </div>
-    <div class="filter-scroller" id="filterScroller"></div>
+    
+    <div class="filter-scroller" id="filterScroller">
+        <div class="filter-tag active" data-section="manchetes">Tudo</div>
+        <div class="filter-tag" data-section="analises">Análises</div>
+        <div class="filter-tag" data-section="smartphones">Smartphones</div>
+    </div>
 </div>
 
 <main id="dynamic-content">
-    <section class="hero">
-        <div id="conteudo_de_destaque">
-            <p style="text-align:center; padding-top:100px; color:var(--text-muted); opacity:0.5;">CARREGANDO SISTEMA...</p>
-        </div>
-    </section>
+    <div style="text-align:center; padding:100px; color:var(--text-muted);">
+        <i class="fa-solid fa-circle-notch fa-spin"></i> Sincronizando Portal...
+    </div>
 </main>
 
 <script type="module" src="scripts/config-firebase.js"></script>
-<script type="module" src="scripts/auth.js"></script>
-<script type="module" src="scripts/tema.js"></script>
-
+<script type="module" src="scripts/auth.js"></script> <script type="module" src="scripts/tema.js"></script>
 <script type="module" src="scripts/modal-manager.js"></script>
 <script type="module" src="scripts/busca.js"></script>
 
@@ -154,30 +112,6 @@
 <script type="module">
     import { inicializarMegaMenu } from './menu/menu.js';
     inicializarMegaMenu();
-</script>
-
-<script>
-/* Lógica de estado do usuário */
-(function () {
-    function aplicarEstadoUsuario(user) {
-        const areaUsuario = document.getElementById("area-usuario");
-        if (!areaUsuario) return;
-        if (user) {
-            areaUsuario.innerHTML = `
-                <div class="usuario-logado">
-                    <span class="usuario-nome">${user.nome || "Usuário"}</span>
-                    <button class="logout-btn" onclick="window.logoutAniGeek && window.logoutAniGeek()">
-                        <i class="fa-solid fa-right-from-bracket"></i>
-                    </button>
-                </div>`;
-        } else {
-            areaUsuario.innerHTML = `<a href="acesso.html" class="link-login">Entrar / Criar conta</a>`;
-        }
-    }
-    if (window.AniGeekUser !== undefined) aplicarEstadoUsuario(window.AniGeekUser);
-    document.addEventListener("user:login", (e) => aplicarEstadoUsuario(e.detail));
-    document.addEventListener("user:logout", () => aplicarEstadoUsuario(null));
-})();
 </script>
 
 </body>

@@ -1,25 +1,26 @@
 /**
  * ARQUIVO: comentarios_de_secao/comentarios_interface.js
  * PAPEL: Injeção Integrada (Mesma Tela) para evitar sobreposição e travamentos.
- * VERSÃO: 7.1 - Alinhamento com Container de Analises.html
+ * VERSÃO: 8.0 - Proteção de Ciclo de Vida e Injeção Resiliente
  */
 
 /**
  * Cria a estrutura dos comentários dentro do container específico da página.
  */
 export function injetarEstruturaModal() {
-    // 🛡️ MUDANÇA: Agora buscamos o container dedicado que criamos no analises.html
+    // 🛡️ MUDANÇA: Buscamos o container dedicado do analises.html
     const containerDedicado = document.getElementById('comentarios-secao-integrada');
     
-    // Fallback: se não achar o dedicado, tenta o dinâmico geral
-    const containerAlvo = containerDedicado || document.getElementById('dynamic-content');
+    // Fallback seguro: se não achar o dedicado, não injeta no dynamic-content via innerHTML
+    // para não destruir a seção inteira. Buscamos o root do módulo se necessário.
+    const containerAlvo = containerDedicado;
     
     if (!containerAlvo) {
-        console.error("Alvo de injeção não encontrado.");
+        console.warn("[Interface] Container 'comentarios-secao-integrada' não encontrado no DOM atual.");
         return;
     }
 
-    // Se já existir, não injetamos de novo
+    // Se já existir, não reinjetamos (evita perda de foco no input)
     if (document.getElementById('modal-comentarios-global')) return;
 
     const modalHTML = `
@@ -57,10 +58,10 @@ export function injetarEstruturaModal() {
         </div>
     `;
 
-    // Injeta no container alvo
+    // Injeta de forma limpa
     containerAlvo.innerHTML = modalHTML;
     
-    if (window.logVisual) window.logVisual("Interface: Seção de comentários injetada na mesma tela.");
+    if (window.logVisual) window.logVisual("Interface: Seção de comentários injetada.");
 }
 
 /**
@@ -85,6 +86,7 @@ export function criarBalaoComentario(autor, texto) {
 
 /**
  * Renderiza mensagens no fluxo
+ * 🛡️ Proteção: Valida se o container ainda existe antes de rolar o scroll
  */
 export function renderizarListaComentarios(comentarios) {
     const listaContainer = document.getElementById('lista-comentarios-fluxo');
@@ -101,7 +103,11 @@ export function renderizarListaComentarios(comentarios) {
 
     listaContainer.innerHTML = comentarios.map(c => criarBalaoComentario(c.autor, c.texto)).join('');
 
+    // 🛡️ O setTimeout agora verifica se o container não foi removido durante o delay
     setTimeout(() => {
-        listaContainer.scrollTo({ top: listaContainer.scrollHeight, behavior: 'smooth' });
+        const checkContainer = document.getElementById('lista-comentarios-fluxo');
+        if (checkContainer) {
+            checkContainer.scrollTo({ top: checkContainer.scrollHeight, behavior: 'smooth' });
+        }
     }, 100);
 }

@@ -39,7 +39,7 @@ body.dark-mode {
     --img-filter: grayscale(20%) brightness(80%);
 }
 
-/* --- SISTEMA DE LOGS VISUAIS (Para Mobile) --- */
+/* --- SISTEMA DE LOGS VISUAIS --- */
 #log-visual-container {
     position: fixed;
     top: 10px;
@@ -87,33 +87,42 @@ body {
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     transition: background var(--duration) var(--ease-editorial), color var(--duration) var(--ease-editorial);
-    overflow-x: hidden; /* Evita quebra lateral no mobile */
+    
+    /* 🛡️ CORREÇÃO: Removido overflow-x: hidden que causava "travamento" do scroll lateral das abas */
+    overflow-x: visible; 
+    min-height: 100vh;
 }
 
-/* --- ESTILO PARA O BOTÃO CARREGAR MAIS (Restaurado) --- */
+/* --- ESTILO PARA O BOTÃO CARREGAR MAIS (Sincronizado) --- */
 .container-carregar-mais {
     width: 100%;
     display: flex;
     justify-content: center;
-    padding: 40px 20px;
+    padding: 20px 20px 80px; /* Mais respiro no rodapé */
 }
 
-.btn-carregar-mais {
-    background: transparent;
-    border: 1px solid var(--border);
-    padding: 12px 30px;
-    font-weight: 800;
+.btn-carregar-mais, .btn-paginacao-geek {
+    background: var(--text-main);
+    border: 1px solid var(--text-main);
+    padding: 14px 34px;
+    font-weight: 900;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    font-size: 12px;
+    letter-spacing: 1.5px;
+    font-size: 11px;
     cursor: pointer;
-    transition: 0.2s;
-    color: var(--text-main);
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--bg);
+    border-radius: 4px; /* Leve arredondado corporativo */
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.btn-carregar-mais:hover {
-    border-color: var(--primary);
+.btn-carregar-mais:hover, .btn-paginacao-geek:hover {
+    background: transparent;
     color: var(--primary);
+    border-color: var(--primary);
+    transform: translateY(-2px);
 }
 
 /* --- ELEMENTOS DE UTILIDADE --- */
@@ -124,7 +133,7 @@ body {
     height: 3px;
     background: var(--primary);
     width: 0%;
-    z-index: 1001;
+    z-index: 10000;
     transition: width 0.1s;
 }
 
@@ -142,7 +151,15 @@ body {
     z-index: 100;
 }
 
-/* Ajuste para quando a busca está ativa ocultar o conteúdo principal */
+/* 🛡️ CORREÇÃO CRÍTICA: 
+   O conteúdo NÃO deve sumir na busca em uma SPA, 
+   apenas as notícias não filtradas devem ser removidas pelo JS. */
 .search-active #dynamic-content {
-    display: none;
+    display: block !important; 
+}
+
+/* Garante que o conteúdo não fique "por baixo" do header fixo */
+main {
+    position: relative;
+    z-index: 1;
 }

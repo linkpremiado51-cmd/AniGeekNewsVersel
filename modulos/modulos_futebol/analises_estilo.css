@@ -1,1 +1,206 @@
 
+/* ======================================================
+   VARIÁVEIS DE TEMA — ANIGEEKNEWS v9.0
+   Foco: Identidade Dinâmica e Carrossel Cinemático
+====================================================== */
+:root {
+  --card-bg: #ffffff;
+  --border: #e0e0e0;
+  --bg: #f8f9fa;
+  --text-main: #121212;
+  --text-muted: #555;
+  --container-w: 1200px;
+  --radius: 12px;
+  --radius-premium: 8px;
+  --accent-analysis: #8A2BE2;
+}
+
+body.dark-mode {
+  --card-bg: #111;
+  --border: #222;
+  --bg: #0a0a0a;
+  --text-main: #f0f0f0;
+  --text-muted: #999;
+}
+
+/* ======================================================
+   ESTRUTURA DO ARTIGO PREMIUM
+====================================================== */
+.destaque-secao-premium {
+  width: 100%;
+  max-width: var(--container-w);
+  margin: 0 auto 60px auto;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+}
+
+.destaque-inner-layout { padding: 30px; }
+
+/* Tags e Categorias */
+.top-meta-row { display: flex; justify-content: space-between; margin-bottom: 20px; }
+.badge-categoria {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--tema-cor);
+}
+.badge-categoria .dot {
+  width: 8px;
+  height: 8px;
+  background: var(--tema-cor);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--tema-cor);
+}
+
+/* Título e Botão de Artigo */
+.main-article-title { 
+    font-size: clamp(1.8rem, 5vw, 2.8rem); 
+    line-height: 1.1; 
+    margin-bottom: 15px; 
+    color: var(--text-main);
+}
+.main-article-summary { font-size: 17px; color: var(--text-muted); margin-bottom: 25px; }
+
+.btn-full-article {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    background: transparent;
+    border: 2px solid var(--tema-cor);
+    color: var(--tema-cor);
+    font-weight: 900;
+    font-size: 12px;
+    border-radius: 4px;
+    transition: 0.3s;
+    margin-bottom: 30px;
+}
+.btn-full-article:hover { background: var(--tema-cor); color: #fff; box-shadow: 0 5px 15px var(--tema-cor); }
+
+/* Ficha Técnica */
+.tech-specs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    background: var(--bg);
+    padding: 20px;
+    border-radius: var(--radius-premium);
+    margin-bottom: 30px;
+    border-top: 3px solid var(--tema-cor);
+}
+
+/* ======================================================
+   VÍDEO PRINCIPAL (CINEMATIC WRAPPER)
+====================================================== */
+.main-video-frame { margin: 0 -30px 30px -30px; background: #000; }
+.video-ratio-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; }
+.video-ratio-wrapper iframe { position: absolute; top:0; left:0; width:100%; height:100%; border:none; }
+
+/* ======================================================
+   CARROSSEL CINEMÁTICO (ESTILO NETFLIX)
+====================================================== */
+.related-videos-section { padding-top: 30px; border-top: 1px solid var(--border); }
+.related-title { font-size: 13px; font-weight: 900; margin-bottom: 20px; letter-spacing: 1px; color: var(--text-main); }
+
+.cinematic-carousel { overflow-x: auto; scrollbar-width: none; padding-bottom: 10px; }
+.cinematic-carousel::-webkit-scrollbar { display: none; }
+.carousel-track { display: flex; gap: 15px; }
+
+.tema-card-premium {
+    flex: 0 0 240px;
+    cursor: pointer;
+    position: relative;
+    border-radius: var(--radius-premium);
+    overflow: hidden;
+    transition: transform 0.4s var(--ease-editorial);
+}
+
+.thumb-container-16-9 {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+}
+
+.video-thumb { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
+
+.video-info-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 15px;
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+    backdrop-filter: blur(2px);
+}
+
+.video-rel-titulo { font-size: 12px; font-weight: 700; color: #fff; line-height: 1.3; }
+
+/* Play Indicator */
+.play-indicator {
+    position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+    width: 40px; height: 40px;
+    background: var(--tema-cor);
+    border-radius: 50%;
+    display: flex;
+    align-items: center; justify-content: center;
+    color: #fff; opacity: 0;
+    transition: 0.3s;
+}
+
+.tema-card-premium:hover .play-indicator { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.tema-card-premium:hover .video-thumb { transform: scale(1.1); }
+
+/* ======================================================
+   INTERAÇÃO E COMUNIDADE
+====================================================== */
+.premium-interaction-bar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    padding: 15px 0;
+}
+
+.action-trigger {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 10px 18px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.action-trigger:hover { border-color: var(--tema-cor); color: var(--tema-cor); }
+.like-trigger.active { background: var(--tema-cor); border-color: var(--tema-cor); color: #fff; }
+
+.community-trigger-modern {
+    background: var(--bg);
+    padding: 18px 25px;
+    border-radius: var(--radius-premium);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    margin-top: 30px;
+}
+
+.community-trigger-modern:hover { border-color: var(--tema-cor); }
+
+/* ======================================================
+   RESPONSIVIDADE
+====================================================== */
+@media (max-width: 768px) {
+    .destaque-inner-layout { padding: 20px; }
+    .main-video-frame { margin: 0 -20px 20px -20px; }
+    .tema-card-premium { flex: 0 0 180px; }
+    .action-trigger span { display: none; }
+}

@@ -1,20 +1,31 @@
 /**
  * ARQUIVO: scripts/navegacao.js
- * PAPEL: Orquestrador de Infraestrutura (SPA) e Navegação via Modal
- * VERSÃO: 3.5.0 - Singleton e Blindagem de Eventos (Arquitetura Pro)
+ * PAPEL: Orquestrador de Infraestrutura (SPA) e Gerenciador de Ciclo de Vida
+ * VERSÃO: 4.0.0 - Implementação de Hooks de Montagem/Desmontagem (Mount/Unmount)
  */
 
-// 🛡️ PILAR 1: Trava Singleton - Impede que listeners sejam duplicados ao reinjetar o script
 if (window.__NAV_SPA_INICIALIZADO__) {
     if (window.logVisual) window.logVisual("⚠️ Orquestrador já ativo. Evitando duplicação.");
 } else {
     window.__NAV_SPA_INICIALIZADO__ = true;
 
     const displayPrincipal = document.getElementById('dynamic-content'); 
-    let modalAberto = false; 
+    let secaoAtiva = null; // 🛡️ RASTREADOR: Armazena o nome da seção atual
 
     function scrollTopo() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * Executa a limpeza da seção que está saindo da tela.
+     */
+    function executarLimpezaModuloAnterior() {
+        if (typeof window.desmontarSecao === 'function') {
+            if (window.logVisual) window.logVisual(`🧹 Finalizando ciclo de vida de: ${secaoAtiva}`);
+            window.desmontarSecao();
+            // Limpa a referência para garantir que o próximo não herde lixo
+            window.desmontarSecao = null; 
+        }
     }
 
     /**
@@ -25,6 +36,9 @@ if (window.__NAV_SPA_INICIALIZADO__) {
             if (window.logVisual) window.logVisual("❌ Erro: Container principal ausente.");
             return;
         }
+
+        // 🛡️ PASSO 1: Ciclo de Desmontagem (Antes de mudar o HTML)
+        executarLimpezaModuloAnterior();
 
         if (window.logVisual) window.logVisual(`🔄 Trocando para: ${nome.toUpperCase()}`);
 
@@ -39,7 +53,9 @@ if (window.__NAV_SPA_INICIALIZADO__) {
             </div>`;
         
         try {
+            // Prepara o ambiente para o novo script
             window.inicializarSecao = null; 
+            secaoAtiva = nome;
 
             const response = await fetch(`./secoes/${nome}.html`);
             if (!response.ok) throw new Error(`Arquivo ${nome}.html não encontrado.`);
@@ -81,8 +97,6 @@ if (window.__NAV_SPA_INICIALIZADO__) {
      * Delegação de Eventos Centralizada
      */
     document.addEventListener('click', (e) => {
-        // 🛡️ PILAR 2: Zona de Exclusão (Data Attribute para Modais)
-        // Se o clique vier de qualquer elemento que tenha o atributo de modal global, ignora totalmente.
         if (e.target.closest('[data-global-modal]') || 
             e.target.closest('#modal-comentarios-global') || 
             e.target.closest('#modal-noticia-global')) {

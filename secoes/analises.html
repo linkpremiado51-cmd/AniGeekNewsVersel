@@ -5,7 +5,8 @@
     <div class="capa-content-inner">
       <h1 id="capa-titulo" class="capa-title">Análises Profundas</h1>
       <p id="capa-descricao" class="capa-desc">Explorações detalhadas sobre a cultura pop e tecnologia.</p>
-      <div class="subcategorias-tags" id="subcategorias-container"></div>
+      <div class="subcategorias-tags" id="subcategorias-container">
+          </div>
     </div>
   </div>
 
@@ -16,25 +17,29 @@
     </div>
   </div>
 
-  <div id="comentarios-secao-integrada" class="comentarios-secao-integrada"></div>
+  <div id="comentarios-secao-integrada" class="comentarios-secao-integrada">
+    </div>
 
   <div id="novo-pagination-modulo" class="container-carregar-mais"></div>
   
-  <div id="toast-copiado">Link copiado para a área de transferência!</div>
-
   <style>
     .destaque-wrapper {
       padding-top: 20px;
       min-height: 100vh;
-      position: static; 
+      position: relative; 
+      /* Animação de entrada suave da seção */
+      animation: fadeIn 0.4s ease-out;
     }
 
-    /* 🛡️ Novo estilo para os comentários integrados */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
     .comentarios-secao-integrada {
       max-width: var(--container-w);
       margin: 0 auto;
       padding: 0 20px;
-      /* Impede que o modal "suma" ou embaçe a tela inteira */
       position: relative; 
       z-index: 50;
     }
@@ -56,7 +61,6 @@
     }
 
     .capa-title { 
-      font-family: var(--font-serif-title);
       font-size: clamp(2rem, 6vw, 3.5rem); 
       font-weight: 900; 
       color: var(--text-main); 
@@ -89,31 +93,6 @@
       box-shadow: 0 8px 20px rgba(138, 43, 226, 0.3);
     }
 
-    #toast-copiado { 
-      position: fixed; 
-      bottom: 30px; 
-      left: 50%; 
-      transform: translateX(-50%); 
-      background: #111; 
-      color: white; 
-      padding: 12px 25px; 
-      border-radius: 50px; 
-      opacity: 0; 
-      visibility: hidden; 
-      transition: 0.3s; 
-      z-index: 1000; 
-      font-weight: 700;
-      font-size: 12px;
-      border: 1px solid #333;
-      pointer-events: none; 
-    }
-
-    #toast-copiado.mostrar { 
-      opacity: 1; 
-      bottom: 40px; 
-      visibility: visible;
-    }
-
     .feed-analises-grid {
       display: flex;
       flex-direction: column;
@@ -121,7 +100,6 @@
       max-width: var(--container-w);
       margin: 0 auto;
       padding: 0 20px;
-      overflow: visible; 
     }
   </style>
 </div>

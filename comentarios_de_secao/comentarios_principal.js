@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: comentarios_de_secao/comentarios_principal.js
  * PAPEL: Módulo de Comentários Integrado (Mesma Tela)
- * VERSÃO: 7.0 - Kill Switch de Sobreposição e Injeção em Container
+ * VERSÃO: 8.0 - Gerenciamento de Memória e Unsubscribe Formal
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -9,25 +9,40 @@ import { getFirestore, collection, onSnapshot, query, orderBy, addDoc, serverTim
 import * as Interface from './comentarios_interface.js';
 import * as Funcoes from './comentarios_funcoes.js';
 
+// Variáveis de controle de estado (Escopo do Módulo)
+let unsubscribeAtual = null;
+let idConteudoAtual = null;
+let app, db;
+
 // --- INICIALIZAÇÃO DA API GLOBAL ---
 window.secaoComentarios = {
     abrir: (id) => {
+        if (!id) return;
         if (window.logVisual) window.logVisual(`[UI] Integrando comentários para: ${id}`);
         
-        // 🛡️ MUDANÇA: Injetamos DENTRO do container de conteúdo, não no body
+        // 🛡️ Garante que se houver uma escuta antiga de outra notícia, ela morra antes da nova
+        if (unsubscribeAtual) {
+            unsubscribeAtual();
+            unsubscribeAtual = null;
+        }
+
         Interface.injetarEstruturaModal(); 
         
         const modal = document.getElementById('modal-comentarios-global');
         if (modal) {
             configurarListenersLocais(modal);
-            // 🛡️ O toggle agora apenas mostra/esconde a seção na mesma tela
             Funcoes.toggleComentarios(true, id);
             carregarComentariosRealTime(id);
         }
     },
     fechar: () => {
-        if (window.logVisual) window.logVisual("[UI] Removendo seção de comentários da tela.");
-        if (unsubscribeAtual) unsubscribeAtual();
+        // 🛡️ CRÍTICO: O "fechar" agora é um encerramento real de processo
+        if (unsubscribeAtual) {
+            if (window.logVisual) window.logVisual("[Firebase] Encerrando escuta de comentários.");
+            unsubscribeAtual();
+            unsubscribeAtual = null;
+        }
+        
         idConteudoAtual = null;
         
         if (Funcoes.toggleComentarios) {
@@ -37,7 +52,7 @@ window.secaoComentarios = {
     enviar: () => enviarComentario()
 };
 
-// Config Firebase (Preservado)
+// --- CONFIGURAÇÃO FIREBASE ---
 const firebaseConfig = {
     apiKey: "AIzaSyBC_ad4X9OwCHKvcG_pNQkKEl76Zw2tu6o",
     authDomain: "anigeeknews.firebaseapp.com",
@@ -47,36 +62,32 @@ const firebaseConfig = {
     appId: "1:769322939926:web:6eb91a96a3f74670882737"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-let unsubscribeAtual = null;
-let idConteudoAtual = null;
+// Inicialização única
+try {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+} catch (e) {
+    console.error("[Comentários] Falha ao conectar Firebase:", e);
+}
 
 /**
  * CONFIGURAÇÃO DE LISTENERS LOCAIS
- * 🛡️ Reforçado para cliques dentro da mesma página
  */
 function configurarListenersLocais(modalElement) {
     if (!modalElement || modalElement.dataset.listenersAtivos === "true") return;
 
     modalElement.addEventListener('click', (e) => {
         const target = e.target;
-        
-        // Clique no botão fechar (X)
         const btnFechar = target.closest('.btn-close-comentarios') || target.closest('.modal-close-trigger');
 
         if (btnFechar) {
             e.preventDefault();
-            e.stopPropagation(); 
             window.secaoComentarios.fechar();
             return;
         }
 
-        // Clique no botão enviar
         if (target.closest('.btn-enviar-comentario') || target.closest('#btn-enviar-global')) {
             e.preventDefault();
-            e.stopPropagation();
             window.secaoComentarios.enviar();
         }
     });
@@ -92,12 +103,12 @@ function configurarListenersLocais(modalElement) {
 }
 
 async function carregarComentariosRealTime(idConteudo) {
-    if (unsubscribeAtual) unsubscribeAtual();
     idConteudoAtual = idConteudo;
 
     const colRef = collection(db, "analises", idConteudo, "comentarios");
     const q = query(colRef, orderBy("data", "asc"));
 
+    // 🛡️ Atribuição da escuta à variável de controle para permitir o Unsubscribe
     unsubscribeAtual = onSnapshot(q, (snapshot) => {
         const comentarios = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         Interface.renderizarListaComentarios(comentarios);

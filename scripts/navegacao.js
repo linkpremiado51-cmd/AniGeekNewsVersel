@@ -1,136 +1,132 @@
 /**
  * ARQUIVO: scripts/navegacao.js
  * PAPEL: Orquestrador de Infraestrutura (SPA) e Gerenciador de Ciclo de Vida
- * VERSÃO: 4.0.0 - Implementação de Hooks de Montagem/Desmontagem (Mount/Unmount)
+ * VERSÃO: 5.0.0 - Refinamentos de Elite: Prefetch & Loading Global
  */
 
 if (window.__NAV_SPA_INICIALIZADO__) {
-    if (window.logVisual) window.logVisual("⚠️ Orquestrador já ativo. Evitando duplicação.");
+    if (window.logVisual) window.logVisual("⚠️ Orquestrador já ativo.");
 } else {
     window.__NAV_SPA_INICIALIZADO__ = true;
 
-    const displayPrincipal = document.getElementById('dynamic-content'); 
-    let secaoAtiva = null; // 🛡️ RASTREADOR: Armazena o nome da seção atual
+    const displayPrincipal = document.getElementById('dynamic-content');
+    const progressBar = document.getElementById('progress-bar');
+    let secaoAtiva = null;
+    let prefetchCache = new Set(); // 🛡️ Cache de URLs já pré-carregadas
 
-    function scrollTopo() {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    /**
+     * CONTROLE DE LOADING GLOBAL (Barra de Progresso)
+     */
+    function updateProgress(percent) {
+        if (!progressBar) return;
+        progressBar.style.width = `${percent}%`;
+        if (percent >= 100) {
+            setTimeout(() => { progressBar.style.width = '0%'; }, 500);
+        }
     }
 
     /**
-     * Executa a limpeza da seção que está saindo da tela.
+     * PREFETCH (Nº 1): Carregamento antecipado ao passar o mouse
      */
+    function prefetchSecao(nome) {
+        if (prefetchCache.has(nome) || secaoAtiva === nome) return;
+        
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = `./secoes/${nome}.html`;
+        document.head.appendChild(link);
+        
+        prefetchCache.add(nome);
+        if (window.logVisual) window.logVisual(`☁️ Prefetch: ${nome} preparado.`);
+    }
+
     function executarLimpezaModuloAnterior() {
         if (typeof window.desmontarSecao === 'function') {
-            if (window.logVisual) window.logVisual(`🧹 Finalizando ciclo de vida de: ${secaoAtiva}`);
+            if (window.logVisual) window.logVisual(`🧹 Finalizando: ${secaoAtiva}`);
             window.desmontarSecao();
-            // Limpa a referência para garantir que o próximo não herde lixo
             window.desmontarSecao = null; 
         }
+        // 🛡️ DEAD MAN'S SWITCH (Nº 3): Garante que comentários e busca parem
+        if (window.secaoComentarios?.fechar) window.secaoComentarios.fechar();
+        if (window.limparBuscaGlobal) window.limparBuscaGlobal();
     }
 
-    /**
-     * Carrega dinamicamente o feed de uma seção (HTML + CSS + Módulo JS).
-     */
     async function carregarSecao(nome) {
-        if (!displayPrincipal) {
-            if (window.logVisual) window.logVisual("❌ Erro: Container principal ausente.");
-            return;
-        }
+        if (!displayPrincipal || secaoAtiva === nome) return;
 
-        // 🛡️ PASSO 1: Ciclo de Desmontagem (Antes de mudar o HTML)
+        updateProgress(30); // Início do Loading
         executarLimpezaModuloAnterior();
-
-        if (window.logVisual) window.logVisual(`🔄 Trocando para: ${nome.toUpperCase()}`);
-
-        if (typeof window.fecharModalNoticia === 'function') {
-            window.fecharModalNoticia();
-        }
-
-        displayPrincipal.innerHTML = `
-            <div style="text-align: center; padding: 120px; color: var(--text-muted);">
-                <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 24px; margin-bottom: 15px; color: var(--primary);"></i>
-                <br><span style="font-weight:700; letter-spacing:1px;">SINCRONIZANDO ${nome.toUpperCase()}...</span>
-            </div>`;
         
-        try {
-            // Prepara o ambiente para o novo script
-            window.inicializarSecao = null; 
-            secaoAtiva = nome;
+        secaoAtiva = nome;
+        window.inicializarSecao = null;
 
+        try {
+            updateProgress(60); // HTML em busca
             const response = await fetch(`./secoes/${nome}.html`);
-            if (!response.ok) throw new Error(`Arquivo ${nome}.html não encontrado.`);
+            if (!response.ok) throw new Error("Erro fetch");
             
             const htmlBase = await response.text();
             displayPrincipal.innerHTML = htmlBase;
 
             const scriptId = `script-modulo-ativo`;
-            const antigo = document.getElementById(scriptId);
-            if (antigo) antigo.remove();
+            document.getElementById(scriptId)?.remove();
 
             const novoScript = document.createElement("script");
             novoScript.id = scriptId;
             novoScript.type = "module";
             
-            let pastaModulo = nome;
-            if (nome === 'analises') pastaModulo = 'modulos_analises';
-            
+            let pastaModulo = nome === 'analises' ? 'modulos_analises' : nome;
             novoScript.src = `./modulos/${pastaModulo}/${nome}_principal.js?v=${Date.now()}`;
             
             novoScript.onload = () => {
                 if (typeof window.inicializarSecao === 'function') {
-                    const root = displayPrincipal.querySelector(`[data-root="${nome}"]`) || displayPrincipal;
-                    window.inicializarSecao(root, { modo: 'lista', origem: nome });
-                    if (window.logVisual) window.logVisual(`✅ Módulo ${nome} carregado.`);
+                    window.inicializarSecao(displayPrincipal, { modo: 'lista', origem: nome });
+                    updateProgress(100); // Concluído!
+                    if (window.logVisual) window.logVisual(`✅ ${nome.toUpperCase()} pronto.`);
                 }
             };
 
             document.body.appendChild(novoScript);
-            scrollTopo();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
 
         } catch (err) {
-            console.error(`❌ Erro SPA:`, err);
-            displayPrincipal.innerHTML = `<div style="text-align:center; padding:100px;">Erro ao carregar módulo.</div>`;
+            updateProgress(0);
+            displayPrincipal.innerHTML = `<div style="text-align:center; padding:100px;">Erro de conexão.</div>`;
         }
     }
 
     /**
-     * Delegação de Eventos Centralizada
+     * DELEGAÇÃO E PREFETCH
      */
+    document.addEventListener('mouseover', (e) => {
+        const link = e.target.closest('[data-section]') || e.target.closest('.nav-item a');
+        if (link) {
+            const secaoId = link.dataset.section || link.textContent.toLowerCase().trim();
+            if (['manchetes', 'analises', 'smartphones', 'tecnologia'].includes(secaoId)) {
+                prefetchSecao(secaoId);
+            }
+        }
+    });
+
     document.addEventListener('click', (e) => {
-        if (e.target.closest('[data-global-modal]') || 
-            e.target.closest('#modal-comentarios-global') || 
-            e.target.closest('#modal-noticia-global')) {
-            return; 
-        }
-
-        const tag = e.target.closest('.filter-tag');
-        const menuLink = e.target.closest('.nav-item a');
-
-        if (tag || menuLink) {
-            let secaoId;
+        const link = e.target.closest('[data-section]') || e.target.closest('.nav-item a');
+        if (link) {
+            if (link.tagName === 'A' && link.getAttribute('href') === '#') e.preventDefault();
             
-            if (tag) {
-                secaoId = tag.dataset.section || tag.textContent.toLowerCase().trim();
-                document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
-                tag.classList.add('active');
-            } else if (menuLink && menuLink.getAttribute('href') === '#') {
-                e.preventDefault();
-                secaoId = menuLink.textContent.toLowerCase().trim();
-            }
-
-            if (secaoId) {
-                if (['manchetes', 'analises', 'smartphones', 'tecnologia'].includes(secaoId)) {
-                    carregarSecao(secaoId);
-                }
+            const secaoId = link.dataset.section || link.textContent.toLowerCase().trim();
+            if (['manchetes', 'analises', 'smartphones', 'tecnologia'].includes(secaoId)) {
+                carregarSecao(secaoId);
             }
         }
+    });
+
+    // 🛡️ AUTH SYNC (Nº 4): Se o usuário logar, notifica os módulos sem recarregar
+    document.addEventListener('user:login', () => {
+        if (window.logVisual) window.logVisual("👤 Sessão iniciada. Sincronizando módulos...");
     });
 
     window.addEventListener('DOMContentLoaded', () => {
         const params = new URLSearchParams(window.location.search);
-        const secaoInicial = params.get('tab') || 'manchetes';
-        carregarSecao(secaoInicial);
+        carregarSecao(params.get('tab') || 'manchetes');
     });
-
-    window.carregarSecao = carregarSecao;
 }

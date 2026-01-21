@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: modulos/modulos_analises/analises_interface.js
  * PAPEL: Renderização Visual das Análises (Barra de Ações Premium)
- * VERSÃO: 5.2 - Inclusão de Sistema de Like e UX de Compartilhamento
+ * VERSÃO: 6.0 - Proteção de Ciclo de Vida e Validação de Container
  */
 
 import { limparEspacos } from './analises_funcoes.js';
@@ -40,6 +40,7 @@ function criarRelacionadosHtml(newsId, relacionados) {
 
 export function renderizarBotaoPaginacao(total, limite) {
     const paginationWrapper = document.getElementById('novo-pagination-modulo');
+    // 🛡️ Validação de Ciclo de Vida: Se o elemento não existe, o módulo pode estar sendo desmontado.
     if (!paginationWrapper) return;
 
     if (total <= limite) {
@@ -59,6 +60,9 @@ export function renderizarBotaoPaginacao(total, limite) {
 
 export function renderizarNoticias(noticias, limite, termoBusca = "") {
     const container = document.getElementById('container-principal');
+    
+    // 🛡️ CRÍTICO: Se o container-principal sumiu, interrompemos a renderização imediatamente.
+    // Isso evita erros no console quando o usuário troca de seção rapidamente.
     if (!container) return;
 
     const listaParaExibir = noticias.slice(0, limite);
@@ -151,11 +155,11 @@ export function renderizarNoticias(noticias, limite, termoBusca = "") {
             </div>
           </div>
 
-          <div class="comments-trigger-bar" style="cursor: pointer;" 
+          <div class="comments-trigger-bar" data-news-id="${news.id}" style="cursor: pointer;" 
                onclick="if(window.secaoComentarios && window.secaoComentarios.abrir) { 
                             window.secaoComentarios.abrir('${news.id}'); 
                         } else { 
-                            if(window.logVisual) window.logVisual('⚠️ Aguarde... Módulo carregando.');
+                            if(window.logVisual) window.logVisual('⚠️ Sistema de comentários não disponível.');
                         }">
             <div class="trigger-left" style="display: flex; align-items: center; gap: 10px; color: var(--tema-cor); font-weight: 700; font-size: 0.85rem;">
               <i class="fa-solid fa-circle-nodes"></i>

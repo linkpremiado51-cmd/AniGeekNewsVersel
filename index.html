@@ -19,7 +19,6 @@
     <link rel="stylesheet" href="modulos/modulos_analises/analises_estilo.css">
 
     <style>
-        /* Estilos da Gaveta de Sugestões (Autocomplete) */
         .search-bar-wrapper { position: relative; }
 
         #search-suggestions-drawer {
@@ -40,31 +39,6 @@
 
         #search-suggestions-drawer.active { display: block; }
 
-        .suggestion-item {
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            transition: background 0.2s;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .suggestion-item:hover { background: rgba(138, 43, 226, 0.15); }
-
-        .suggestion-item i {
-            color: #8A2BE2;
-            width: 20px;
-            text-align: center;
-        }
-
-        .suggestion-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-main, #fff);
-        }
-
-        /* 🛡️ CORREÇÕES DE LAYOUT SPA */
         .sticky-nav-group {
             position: sticky;
             top: 0;
@@ -75,8 +49,6 @@
 
         #dynamic-content {
             min-height: 80vh;
-            display: block;
-            overflow: visible;
             padding-bottom: 60px;
         }
 
@@ -85,7 +57,6 @@
             display: flex;
             justify-content: center;
             padding: 40px 0;
-            clear: both;
         }
     </style>
 </head>
@@ -100,6 +71,7 @@
 </div>
 
 <div class="sticky-nav-group">
+
     <header>
         <div class="nav-container">
             <a href="./index.html" class="logo">AniGeek<span>News</span></a>
@@ -118,10 +90,16 @@
     <div class="search-bar-wrapper">
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="input-busca-global" placeholder="Pesquisar notícias ou análises..." autocomplete="off">
+            <input type="text" id="input-busca-global"
+                   placeholder="Pesquisar notícias ou análises..."
+                   autocomplete="off">
         </div>
         <div id="search-suggestions-drawer"></div>
     </div>
+
+    <!-- 🔗 DIV ESSENCIAL PARA O SISTEMA DE ABAS -->
+    <div id="filterScroller" class="filter-scroller"></div>
+
 </div>
 
 <main id="dynamic-content">

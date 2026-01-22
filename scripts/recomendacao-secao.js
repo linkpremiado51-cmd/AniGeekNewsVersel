@@ -350,8 +350,14 @@ function getMode(){ return load(CONFIG.KEYS.MODE, 'dynamic'); }
 function setMode(m){ save(CONFIG.KEYS.MODE, m); renderDrawer(); }
 
 function getOrder(){
-  const saved = load(CONFIG.KEYS.ORDER, null);
-  return saved || ['manchetes', 'analises', 'entrevistas'];
+const saved = load(CONFIG.KEYS.ORDER, null);
+
+// 🔒 Garante que sempre exista ao menos UMA seção SPA válida
+if (!saved || !Array.isArray(saved) || saved.length === 0) {
+return ['analises'];
+}
+
+return saved;
 }
 
 function findItem(id){
@@ -545,7 +551,24 @@ function handleAction(id, label){
 }
 
 /* Inicialização */
-if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderBar);
-else renderBar();
+function initBarAndSection() {
+  renderBar();
+
+  const order = getOrder();
+  const firstSection = order[0];
+
+  if (firstSection && window.carregarSecao) {
+    window.carregarSecao(firstSection);
+
+    // Marca visualmente a aba como ativa
+    const btn = document.querySelector(`#filterScroller .filter-tag[data-section="${firstSection}"]`);
+    if (btn) btn.classList.add('active');
+  }
+}
+
+if (document.readyState === 'loading')
+  document.addEventListener('DOMContentLoaded', initBarAndSection);
+else
+  initBarAndSection();
 
 })();

@@ -562,7 +562,7 @@ function initBarAndSection() {
 
     // Marca visualmente a aba como ativa
     const btn = document.querySelector(`#filterScroller .filter-tag[data-section="${firstSection}"]`);
-    if (btn) btn.classList.add('active');
+    if (btn) btn.click();
   }
 }
 

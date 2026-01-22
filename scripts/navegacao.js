@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: scripts/navegacao.js
  * PAPEL: Orquestrador Dinâmico Universal (SPA)
- * VERSÃO: 6.5.0 - Suporte a Sub-itens e Evento SPA:ready
+ * VERSÃO: 6.5.1 - Correção de Escopo e Evento SPA:ready
  */
 
 if (window.__NAV_SPA_INICIALIZADO__) {
@@ -31,13 +31,19 @@ if (window.__NAV_SPA_INICIALIZADO__) {
 
     /**
      * 🔍 FUNÇÃO AUXILIAR PARA ENCONTRAR SEÇÃO PAI
+     * Protegida contra erros de escopo do CATALOGO
      */
     function getParentSection(subId) {
-        if (typeof CATALOGO === 'undefined') return subId;
-        for (let sec of CATALOGO) {
-            if (sec.itens && sec.itens.some(i => i.id === subId)) return sec.id;
+        try {
+            // Verifica se o CATALOGO existe globalmente ou se foi exportado
+            const catalogoReferencia = window.CATALOGO_GLOBAL || window.CATALOGO || [];
+            for (let sec of catalogoReferencia) {
+                if (sec.itens && sec.itens.some(i => i.id === subId)) return sec.id;
+            }
+        } catch (e) {
+            console.warn("Navegação: Catálogo não acessível para busca de pai.");
         }
-        return subId; // retorna ele mesmo se não achar pai
+        return subId; 
     }
 
     /**
@@ -48,9 +54,14 @@ if (window.__NAV_SPA_INICIALIZADO__) {
             el.classList.remove('active', 'ativo', 'selected');
         });
 
-        // Procura a aba exata ou a aba pai caso seja um sub-item (ex: 'opiniao' dentro de 'analises')
-        const abaAtiva = document.querySelector(`[data-section="${secao}"]`) 
-                        || document.querySelector(`[data-section="${getParentSection(secao)}"]`);
+        // Tenta achar a aba direta
+        let abaAtiva = document.querySelector(`[data-section="${secao}"]`);
+        
+        // Se não achar, tenta achar pelo pai (ex: 'opiniao' -> 'analises')
+        if (!abaAtiva) {
+            const paiId = getParentSection(secao);
+            abaAtiva = document.querySelector(`[data-section="${paiId}"]`);
+        }
 
         if (abaAtiva) {
             abaAtiva.classList.add('active');
@@ -132,13 +143,11 @@ if (window.__NAV_SPA_INICIALIZADO__) {
                     });
                 }
 
-                // 🔥 SINCRONIZA ESTADO DO SPA COM O MENU
                 ativarAba(nome);
-
                 updateProgress(100);
 
                 if (window.logVisual) {
-                    window.logVisual(`✅ ${nome.toUpperCase()} pronto e aba ativa.`);
+                    window.logVisual(`✅ ${nome.toUpperCase()} pronto.`);
                 }
             };
 
@@ -156,7 +165,6 @@ if (window.__NAV_SPA_INICIALIZADO__) {
         }
     }
 
-    // Tornar carregarSecao global para que o módulo de abas possa acessá-lo
     window.carregarSecao = carregarSecao;
 
     /**
@@ -209,12 +217,8 @@ if (window.__NAV_SPA_INICIALIZADO__) {
         const params = new URLSearchParams(window.location.search);
         const secaoInicial = params.get('tab') || 'analises';
 
-        if (window.logVisual) {
-            window.logVisual(`🚀 Inicialização SPA após Firebase: ${secaoInicial}`);
-        }
-
-        // Carrega a seção inicial e então avisa que o SPA está pronto
         carregarSecao(secaoInicial).then(() => {
+            // Garante que o evento só dispare após a primeira carga
             window.dispatchEvent(new Event('SPA:ready'));
         });
     });

@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: scripts/navegacao.js
  * PAPEL: Orquestrador Dinâmico Universal (SPA)
- * VERSÃO: 6.2.0 - Inicialização em Análises e Suporte Escalável
+ * VERSÃO: 6.3.0 - Inicialização Sincronizada com Firebase (BUG FIX)
  */
 
 if (window.__NAV_SPA_INICIALIZADO__) {
@@ -12,10 +12,11 @@ if (window.__NAV_SPA_INICIALIZADO__) {
     const displayPrincipal = document.getElementById('dynamic-content');
     const progressBar = document.getElementById('progress-bar');
     let secaoAtiva = null;
-    let prefetchCache = new Set(); // 🛡️ Cache de URLs já pré-carregadas
+    let prefetchCache = new Set();
+    let inicializacaoDisparada = false; // 🛡️ trava de inicialização
 
     /**
-     * CONTROLE DE LOADING GLOBAL (Barra de Progresso)
+     * CONTROLE DE LOADING GLOBAL
      */
     function updateProgress(percent) {
         if (!progressBar) return;
@@ -26,72 +27,75 @@ if (window.__NAV_SPA_INICIALIZADO__) {
     }
 
     /**
-     * PREFETCH: Carregamento antecipado ao passar o mouse
+     * PREFETCH DE SEÇÕES
      */
     function prefetchSecao(nome) {
         if (prefetchCache.has(nome) || secaoAtiva === nome) return;
-        
+
         const link = document.createElement('link');
         link.rel = 'prefetch';
         link.href = `./secoes/${nome}.html`;
         document.head.appendChild(link);
-        
+
         prefetchCache.add(nome);
         if (window.logVisual) window.logVisual(`☁️ Prefetch: ${nome} preparado.`);
     }
 
     /**
-     * LIMPEZA: Finaliza processos do módulo anterior
+     * LIMPEZA DO MÓDULO ANTERIOR
      */
     function executarLimpezaModuloAnterior() {
         if (typeof window.desmontarSecao === 'function') {
             if (window.logVisual) window.logVisual(`🧹 Finalizando: ${secaoAtiva}`);
             window.desmontarSecao();
-            window.desmontarSecao = null; 
+            window.desmontarSecao = null;
         }
-        // 🛡️ Fecha componentes globais abertos
+
         if (window.secaoComentarios?.fechar) window.secaoComentarios.fechar();
         if (window.limparBuscaGlobal) window.limparBuscaGlobal();
     }
 
     /**
-     * CORE: Carregamento de Seção e Injeção de Módulo
+     * CARREGAMENTO DE SEÇÃO
      */
     async function carregarSecao(nome) {
         if (!displayPrincipal || secaoAtiva === nome) return;
 
-        updateProgress(30); 
+        updateProgress(30);
         executarLimpezaModuloAnterior();
-        
+
         secaoAtiva = nome;
         window.inicializarSecao = null;
 
         try {
-            updateProgress(60); 
-            // 📂 Padrão: HTMLs sempre na pasta /secoes/
+            updateProgress(60);
+
             const response = await fetch(`./secoes/${nome}.html`);
             if (!response.ok) throw new Error(`Módulo ${nome} não encontrado.`);
-            
+
             const htmlBase = await response.text();
             displayPrincipal.innerHTML = htmlBase;
 
-            const scriptId = `script-modulo-ativo`;
+            const scriptId = 'script-modulo-ativo';
             document.getElementById(scriptId)?.remove();
 
-            const novoScript = document.createElement("script");
+            const novoScript = document.createElement('script');
             novoScript.id = scriptId;
-            novoScript.type = "module";
-            
-            // 🛡️ Lógica de Pastas: modulos_nome para específicos, ou pasta direta
-            let pastaModulo = (nome === 'analises' || nome === 'futebol' || nome === 'arte' || nome === 'politica') 
-                ? `modulos_${nome}` 
-                : nome;
-                
+            novoScript.type = 'module';
+
+            const pastaModulo =
+                (nome === 'analises' || nome === 'futebol' || nome === 'arte' || nome === 'politica')
+                    ? `modulos_${nome}`
+                    : nome;
+
             novoScript.src = `./modulos/${pastaModulo}/${nome}_principal.js?v=${Date.now()}`;
-            
+
             novoScript.onload = () => {
                 if (typeof window.inicializarSecao === 'function') {
-                    window.inicializarSecao(displayPrincipal, { modo: 'lista', origem: nome });
+                    window.inicializarSecao(displayPrincipal, {
+                        modo: 'lista',
+                        origem: nome
+                    });
                     updateProgress(100);
                     if (window.logVisual) window.logVisual(`✅ ${nome.toUpperCase()} pronto.`);
                 }
@@ -102,39 +106,56 @@ if (window.__NAV_SPA_INICIALIZADO__) {
 
         } catch (err) {
             updateProgress(0);
-            console.error("Erro de Navegação:", err);
-            displayPrincipal.innerHTML = `<div style="text-align:center; padding:100px;">Erro de conexão ao carregar: ${nome}</div>`;
+            console.error('Erro de Navegação:', err);
+            displayPrincipal.innerHTML =
+                `<div style="text-align:center; padding:100px;">
+                    Erro ao carregar a seção: ${nome}
+                </div>`;
         }
     }
 
     /**
-     * DELEGAÇÃO DE EVENTOS (Cliques e Mouseover)
+     * CLIQUES DE NAVEGAÇÃO
      */
     document.addEventListener('click', (e) => {
         const link = e.target.closest('[data-section]') || e.target.closest('.nav-item a');
-        if (link) {
-            const secaoId = link.dataset.section || link.textContent.toLowerCase().trim();
-            if (secaoId) {
-                if (link.tagName === 'A' && link.getAttribute('href') === '#') e.preventDefault();
-                carregarSecao(secaoId);
-            }
-        }
-    });
+        if (!link) return;
 
-    document.addEventListener('mouseover', (e) => {
-        const link = e.target.closest('[data-section]') || e.target.closest('.nav-item a');
-        if (link) {
-            const secaoId = link.dataset.section || link.textContent.toLowerCase().trim();
-            if (secaoId) prefetchSecao(secaoId);
+        const secaoId = link.dataset.section || link.textContent.toLowerCase().trim();
+        if (!secaoId) return;
+
+        if (link.tagName === 'A' && link.getAttribute('href') === '#') {
+            e.preventDefault();
         }
+
+        carregarSecao(secaoId);
     });
 
     /**
-     * INICIALIZAÇÃO DO PORTAL
+     * PREFETCH AO PASSAR O MOUSE
      */
-    window.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('mouseover', (e) => {
+        const link = e.target.closest('[data-section]') || e.target.closest('.nav-item a');
+        if (!link) return;
+
+        const secaoId = link.dataset.section || link.textContent.toLowerCase().trim();
+        if (secaoId) prefetchSecao(secaoId);
+    });
+
+    /**
+     * 🚀 INICIALIZAÇÃO CORRETA (AGUARDA FIREBASE)
+     */
+    window.addEventListener('firebase:data_updated', () => {
+        if (inicializacaoDisparada) return;
+        inicializacaoDisparada = true;
+
         const params = new URLSearchParams(window.location.search);
-        // 🎯 Fallback alterado para 'analises' conforme solicitado
-        carregarSecao(params.get('tab') || 'analises');
+        const secaoInicial = params.get('tab') || 'analises';
+
+        if (window.logVisual) {
+            window.logVisual(`🚀 Inicialização SPA após Firebase: ${secaoInicial}`);
+        }
+
+        carregarSecao(secaoInicial);
     });
 }

@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: scripts/navegacao.js
  * PAPEL: Orquestrador Dinâmico Universal (SPA)
- * VERSÃO: 6.4.0 - Inicialização com Aba Ativa Sincronizada
+ * VERSÃO: 6.4.1 - Aba Ativa Sincronizada + Exposição Global
  */
 
 if (window.__NAV_SPA_INICIALIZADO__) {
@@ -73,7 +73,7 @@ if (window.__NAV_SPA_INICIALIZADO__) {
     }
 
     /**
-     * CARREGAMENTO DE SEÇÃO
+     * CARREGAMENTO DE SEÇÃO (CORE DO SPA)
      */
     async function carregarSecao(nome) {
         if (!displayPrincipal || secaoAtiva === nome) return;
@@ -118,13 +118,13 @@ if (window.__NAV_SPA_INICIALIZADO__) {
                     });
                 }
 
-                // 🔥 SINCRONIZA ESTADO DO SPA COM O MENU
+                // 🔥 sincroniza estado visual do menu
                 ativarAba(nome);
 
                 updateProgress(100);
 
                 if (window.logVisual) {
-                    window.logVisual(`✅ ${nome.toUpperCase()} pronto e aba ativa.`);
+                    window.logVisual(`✅ ${nome.toUpperCase()} carregado e ativo.`);
                 }
             };
 
@@ -141,6 +141,11 @@ if (window.__NAV_SPA_INICIALIZADO__) {
             `;
         }
     }
+
+    /**
+     * 🔓 EXPÕE O CARREGADOR GLOBALMENTE (OBRIGATÓRIO)
+     */
+    window.carregarSecao = carregarSecao;
 
     /**
      * CLIQUES DE NAVEGAÇÃO
@@ -183,7 +188,7 @@ if (window.__NAV_SPA_INICIALIZADO__) {
     });
 
     /**
-     * 🚀 INICIALIZAÇÃO CORRETA (AGUARDA FIREBASE)
+     * 🚀 INICIALIZAÇÃO SEGURA (AGUARDA FIREBASE)
      */
     window.addEventListener('firebase:data_updated', () => {
         if (inicializacaoDisparada) return;

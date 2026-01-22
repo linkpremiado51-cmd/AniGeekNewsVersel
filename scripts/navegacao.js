@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: scripts/navegacao.js
  * PAPEL: Orquestrador Dinâmico Universal (SPA)
- * VERSÃO: 6.3.0 - Inicialização Sincronizada com Firebase (BUG FIX)
+ * VERSÃO: 6.4.0 - Inicialização com Aba Ativa Sincronizada
  */
 
 if (window.__NAV_SPA_INICIALIZADO__) {
@@ -11,6 +11,7 @@ if (window.__NAV_SPA_INICIALIZADO__) {
 
     const displayPrincipal = document.getElementById('dynamic-content');
     const progressBar = document.getElementById('progress-bar');
+
     let secaoAtiva = null;
     let prefetchCache = new Set();
     let inicializacaoDisparada = false; // 🛡️ trava de inicialização
@@ -22,7 +23,23 @@ if (window.__NAV_SPA_INICIALIZADO__) {
         if (!progressBar) return;
         progressBar.style.width = `${percent}%`;
         if (percent >= 100) {
-            setTimeout(() => { progressBar.style.width = '0%'; }, 500);
+            setTimeout(() => {
+                progressBar.style.width = '0%';
+            }, 500);
+        }
+    }
+
+    /**
+     * 🎯 ATIVA VISUALMENTE A ABA CORRETA
+     */
+    function ativarAba(secao) {
+        document.querySelectorAll('[data-section]').forEach(el => {
+            el.classList.remove('active', 'ativo', 'selected');
+        });
+
+        const abaAtiva = document.querySelector(`[data-section="${secao}"]`);
+        if (abaAtiva) {
+            abaAtiva.classList.add('active');
         }
     }
 
@@ -84,7 +101,10 @@ if (window.__NAV_SPA_INICIALIZADO__) {
             novoScript.type = 'module';
 
             const pastaModulo =
-                (nome === 'analises' || nome === 'futebol' || nome === 'arte' || nome === 'politica')
+                (nome === 'analises' ||
+                 nome === 'futebol' ||
+                 nome === 'arte' ||
+                 nome === 'politica')
                     ? `modulos_${nome}`
                     : nome;
 
@@ -96,8 +116,15 @@ if (window.__NAV_SPA_INICIALIZADO__) {
                         modo: 'lista',
                         origem: nome
                     });
-                    updateProgress(100);
-                    if (window.logVisual) window.logVisual(`✅ ${nome.toUpperCase()} pronto.`);
+                }
+
+                // 🔥 SINCRONIZA ESTADO DO SPA COM O MENU
+                ativarAba(nome);
+
+                updateProgress(100);
+
+                if (window.logVisual) {
+                    window.logVisual(`✅ ${nome.toUpperCase()} pronto e aba ativa.`);
                 }
             };
 
@@ -107,10 +134,11 @@ if (window.__NAV_SPA_INICIALIZADO__) {
         } catch (err) {
             updateProgress(0);
             console.error('Erro de Navegação:', err);
-            displayPrincipal.innerHTML =
-                `<div style="text-align:center; padding:100px;">
+            displayPrincipal.innerHTML = `
+                <div style="text-align:center; padding:100px;">
                     Erro ao carregar a seção: ${nome}
-                </div>`;
+                </div>
+            `;
         }
     }
 
@@ -118,10 +146,16 @@ if (window.__NAV_SPA_INICIALIZADO__) {
      * CLIQUES DE NAVEGAÇÃO
      */
     document.addEventListener('click', (e) => {
-        const link = e.target.closest('[data-section]') || e.target.closest('.nav-item a');
+        const link =
+            e.target.closest('[data-section]') ||
+            e.target.closest('.nav-item a');
+
         if (!link) return;
 
-        const secaoId = link.dataset.section || link.textContent.toLowerCase().trim();
+        const secaoId =
+            link.dataset.section ||
+            link.textContent.toLowerCase().trim();
+
         if (!secaoId) return;
 
         if (link.tagName === 'A' && link.getAttribute('href') === '#') {
@@ -135,10 +169,16 @@ if (window.__NAV_SPA_INICIALIZADO__) {
      * PREFETCH AO PASSAR O MOUSE
      */
     document.addEventListener('mouseover', (e) => {
-        const link = e.target.closest('[data-section]') || e.target.closest('.nav-item a');
+        const link =
+            e.target.closest('[data-section]') ||
+            e.target.closest('.nav-item a');
+
         if (!link) return;
 
-        const secaoId = link.dataset.section || link.textContent.toLowerCase().trim();
+        const secaoId =
+            link.dataset.section ||
+            link.textContent.toLowerCase().trim();
+
         if (secaoId) prefetchSecao(secaoId);
     });
 

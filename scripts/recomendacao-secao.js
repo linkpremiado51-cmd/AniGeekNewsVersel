@@ -550,25 +550,26 @@ function handleAction(id, label){
   }
 }
 
-/* Inicialização */
-function initBarAndSection() {
+/* 🚀 INICIALIZAÇÃO SINCRONIZADA COM SPA */
+function initAbas() {
   renderBar();
 
   const order = getOrder();
   const firstSection = order[0];
 
-  if (firstSection && window.carregarSecao) {
-    window.carregarSecao(firstSection);
-
-    // Marca visualmente a aba como ativa
+  if (firstSection) {
+    // Busca o botão correspondente na barra horizontal e dispara o clique
+    // O clique já contém a lógica de carregarSecao e track
     const btn = document.querySelector(`#filterScroller .filter-tag[data-section="${firstSection}"]`);
     if (btn) btn.click();
   }
 }
 
-if (document.readyState === 'loading')
-  document.addEventListener('DOMContentLoaded', initBarAndSection);
-else
-  initBarAndSection();
+// Aguarda o sinal do Orquestrador (navegacao.js)
+if (window.carregarSecao) {
+    initAbas();
+} else {
+    window.addEventListener('SPA:ready', initAbas);
+}
 
 })();

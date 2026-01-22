@@ -19,6 +19,11 @@
     <link rel="stylesheet" href="modulos/modulos_analises/analises_estilo.css">
 
     <style>
+        /* 🎨 VARIÁVEL MESTRE: Controlada pelo scripts/customizacao-abas.js */
+        :root {
+            --tema-cor: #8A2BE2; /* Cor padrão inicial */
+        }
+
         /* Estilos da Gaveta de Sugestões (Autocomplete) */
         .search-bar-wrapper { position: relative; }
         #search-suggestions-drawer {
@@ -47,7 +52,7 @@
             border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         .suggestion-item:hover { background: rgba(138, 43, 226, 0.15); }
-        .suggestion-item i { color: #8A2BE2; width: 20px; text-align: center; }
+        .suggestion-item i { color: var(--tema-cor); width: 20px; text-align: center; }
         .suggestion-title { font-size: 14px; font-weight: 600; color: var(--text-main, #fff); }
 
         /* 🛡️ CORREÇÕES DE LAYOUT SPA */
@@ -59,20 +64,41 @@
             border-bottom: 1px solid var(--border);
         }
 
+        #progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            width: 0%;
+            background-color: var(--tema-cor);
+            z-index: 9999;
+            transition: background-color 0.4s ease;
+        }
+
         #dynamic-content {
             min-height: 80vh;
             display: block;
-            overflow: visible; /* Garante que o botão carregar mais não seja cortado */
-            padding-bottom: 60px; /* Espaço para o botão respirar no final */
+            overflow: visible; 
+            padding-bottom: 60px; 
         }
 
-        /* Garante que o container de paginação injetado seja visível */
-        .container-carregar-mais {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            padding: 40px 0;
-            clear: both;
+        /* LOG VISUAL (DEBUG) */
+        #log-visual-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10000;
+            pointer-events: none;
+        }
+        .log-entry {
+            background: rgba(0,0,0,0.8);
+            color: #00ff00;
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin-top: 5px;
+            font-family: monospace;
+            font-size: 11px;
+            animation: fadeIn 0.3s forwards;
         }
     </style>
 </head>
@@ -81,6 +107,8 @@
 
 <div id="progress-bar"></div>
 <div id="megaMenuContainer"></div>
+
+<div id="log-visual-container"></div>
 
 <div id="toast-copiado" class="toast-aviso">
     <i class="fa-solid fa-check-circle"></i> Link copiado para a área de transferência!
@@ -96,6 +124,12 @@
                 <li class="nav-item"><a href="#" data-section="tecnologia">Tecnologia</a></li>
                 <li class="nav-item" id="area-usuario"></li> 
             </ul>
+            
+            <div class="theme-switch-wrapper">
+                <input type="checkbox" id="mobileThemeToggle">
+                <label for="mobileThemeToggle" class="theme-label"><i class="fas fa-moon"></i></label>
+            </div>
+
             <button class="menu-toggle" onclick="abrirMegaMenu()">
                 <i class="fas fa-bars"></i>
             </button>
@@ -111,9 +145,7 @@
     </div>
     
     <div class="filter-scroller" id="filterScroller">
-        <div class="filter-tag active" data-section="manchetes">Tudo</div>
-        <div class="filter-tag" data-section="analises">Análises</div>
-        <div class="filter-tag" data-section="smartphones">Smartphones</div>
+        <div class="loading-shimmer" style="width: 100px; height: 30px;"></div>
     </div>
 </div>
 
@@ -125,15 +157,12 @@
 
 <script type="module" src="scripts/config-firebase.js"></script>
 <script type="module" src="scripts/auth.js"></script> 
-<script type="module" src="scripts/tema.js"></script>
-<script type="module" src="scripts/modal-manager.js"></script>
+<script src="scripts/tema.js"></script> <script type="module" src="scripts/modal-manager.js"></script>
 <script type="module" src="scripts/busca.js"></script>
 
 <script type="module" src="comentarios_de_secao/comentarios_principal.js"></script>
 <script type="module" src="scripts/navegacao.js"></script>
-<script src="scripts/recomendacao-secao.js"></script>
-
-<script type="module">
+<script src="scripts/customizacao-abas.js"></script> <script type="module">
     import { inicializarMegaMenu } from './menu/menu.js';
     inicializarMegaMenu();
 </script>

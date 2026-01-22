@@ -21,6 +21,7 @@
     <style>
         /* Estilos da Gaveta de Sugestões (Autocomplete) */
         .search-bar-wrapper { position: relative; }
+
         #search-suggestions-drawer {
             display: none;
             position: absolute;
@@ -36,7 +37,9 @@
             max-height: 350px;
             overflow-y: auto;
         }
+
         #search-suggestions-drawer.active { display: block; }
+
         .suggestion-item {
             padding: 12px 20px;
             display: flex;
@@ -46,9 +49,20 @@
             transition: background 0.2s;
             border-bottom: 1px solid rgba(255,255,255,0.05);
         }
+
         .suggestion-item:hover { background: rgba(138, 43, 226, 0.15); }
-        .suggestion-item i { color: #8A2BE2; width: 20px; text-align: center; }
-        .suggestion-title { font-size: 14px; font-weight: 600; color: var(--text-main, #fff); }
+
+        .suggestion-item i {
+            color: #8A2BE2;
+            width: 20px;
+            text-align: center;
+        }
+
+        .suggestion-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main, #fff);
+        }
 
         /* 🛡️ CORREÇÕES DE LAYOUT SPA */
         .sticky-nav-group {
@@ -62,11 +76,10 @@
         #dynamic-content {
             min-height: 80vh;
             display: block;
-            overflow: visible; /* Garante que o botão carregar mais não seja cortado */
-            padding-bottom: 60px; /* Espaço para o botão respirar no final */
+            overflow: visible;
+            padding-bottom: 60px;
         }
 
-        /* Garante que o container de paginação injetado seja visível */
         .container-carregar-mais {
             width: 100%;
             display: flex;
@@ -108,12 +121,6 @@
             <input type="text" id="input-busca-global" placeholder="Pesquisar notícias ou análises..." autocomplete="off">
         </div>
         <div id="search-suggestions-drawer"></div>
-    </div>
-    
-    <div class="filter-scroller" id="filterScroller">
-        <div class="filter-tag active" data-section="manchetes">Tudo</div>
-        <div class="filter-tag" data-section="analises">Análises</div>
-        <div class="filter-tag" data-section="smartphones">Smartphones</div>
     </div>
 </div>
 

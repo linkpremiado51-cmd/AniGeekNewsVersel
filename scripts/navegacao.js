@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: scripts/navegacao.js
  * PAPEL: Orquestrador Dinâmico Universal (SPA)
- * VERSÃO: 6.5.1 - Correção de Escopo e Evento SPA:ready
+ * VERSÃO: 6.4.0 - Inicialização com Aba Ativa Sincronizada
  */
 
 if (window.__NAV_SPA_INICIALIZADO__) {
@@ -30,39 +30,14 @@ if (window.__NAV_SPA_INICIALIZADO__) {
     }
 
     /**
-     * 🔍 FUNÇÃO AUXILIAR PARA ENCONTRAR SEÇÃO PAI
-     * Protegida contra erros de escopo do CATALOGO
-     */
-    function getParentSection(subId) {
-        try {
-            // Verifica se o CATALOGO existe globalmente ou se foi exportado
-            const catalogoReferencia = window.CATALOGO_GLOBAL || window.CATALOGO || [];
-            for (let sec of catalogoReferencia) {
-                if (sec.itens && sec.itens.some(i => i.id === subId)) return sec.id;
-            }
-        } catch (e) {
-            console.warn("Navegação: Catálogo não acessível para busca de pai.");
-        }
-        return subId; 
-    }
-
-    /**
-     * 🎯 ATIVA VISUALMENTE A ABA CORRETA (SUPORTA SUB-ITENS)
+     * 🎯 ATIVA VISUALMENTE A ABA CORRETA
      */
     function ativarAba(secao) {
         document.querySelectorAll('[data-section]').forEach(el => {
             el.classList.remove('active', 'ativo', 'selected');
         });
 
-        // Tenta achar a aba direta
-        let abaAtiva = document.querySelector(`[data-section="${secao}"]`);
-        
-        // Se não achar, tenta achar pelo pai (ex: 'opiniao' -> 'analises')
-        if (!abaAtiva) {
-            const paiId = getParentSection(secao);
-            abaAtiva = document.querySelector(`[data-section="${paiId}"]`);
-        }
-
+        const abaAtiva = document.querySelector(`[data-section="${secao}"]`);
         if (abaAtiva) {
             abaAtiva.classList.add('active');
         }
@@ -143,11 +118,13 @@ if (window.__NAV_SPA_INICIALIZADO__) {
                     });
                 }
 
+                // 🔥 SINCRONIZA ESTADO DO SPA COM O MENU
                 ativarAba(nome);
+
                 updateProgress(100);
 
                 if (window.logVisual) {
-                    window.logVisual(`✅ ${nome.toUpperCase()} pronto.`);
+                    window.logVisual(`✅ ${nome.toUpperCase()} pronto e aba ativa.`);
                 }
             };
 
@@ -164,8 +141,6 @@ if (window.__NAV_SPA_INICIALIZADO__) {
             `;
         }
     }
-
-    window.carregarSecao = carregarSecao;
 
     /**
      * CLIQUES DE NAVEGAÇÃO
@@ -217,9 +192,10 @@ if (window.__NAV_SPA_INICIALIZADO__) {
         const params = new URLSearchParams(window.location.search);
         const secaoInicial = params.get('tab') || 'analises';
 
-        carregarSecao(secaoInicial).then(() => {
-            // Garante que o evento só dispare após a primeira carga
-            window.dispatchEvent(new Event('SPA:ready'));
-        });
+        if (window.logVisual) {
+            window.logVisual(`🚀 Inicialização SPA após Firebase: ${secaoInicial}`);
+        }
+
+        carregarSecao(secaoInicial);
     });
 }

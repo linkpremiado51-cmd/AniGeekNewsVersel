@@ -1,7 +1,7 @@
 /**
  * ARQUIVO: scripts/navegacao.js
  * PAPEL: Orquestrador Dinâmico Universal (SPA)
- * VERSÃO: 6.4.0 - Inicialização com Aba Ativa Sincronizada
+ * VERSÃO: 6.5.0 - Suporte a Sub-itens e Evento SPA:ready
  */
 
 if (window.__NAV_SPA_INICIALIZADO__) {
@@ -30,14 +30,28 @@ if (window.__NAV_SPA_INICIALIZADO__) {
     }
 
     /**
-     * 🎯 ATIVA VISUALMENTE A ABA CORRETA
+     * 🔍 FUNÇÃO AUXILIAR PARA ENCONTRAR SEÇÃO PAI
+     */
+    function getParentSection(subId) {
+        if (typeof CATALOGO === 'undefined') return subId;
+        for (let sec of CATALOGO) {
+            if (sec.itens && sec.itens.some(i => i.id === subId)) return sec.id;
+        }
+        return subId; // retorna ele mesmo se não achar pai
+    }
+
+    /**
+     * 🎯 ATIVA VISUALMENTE A ABA CORRETA (SUPORTA SUB-ITENS)
      */
     function ativarAba(secao) {
         document.querySelectorAll('[data-section]').forEach(el => {
             el.classList.remove('active', 'ativo', 'selected');
         });
 
-        const abaAtiva = document.querySelector(`[data-section="${secao}"]`);
+        // Procura a aba exata ou a aba pai caso seja um sub-item (ex: 'opiniao' dentro de 'analises')
+        const abaAtiva = document.querySelector(`[data-section="${secao}"]`) 
+                        || document.querySelector(`[data-section="${getParentSection(secao)}"]`);
+
         if (abaAtiva) {
             abaAtiva.classList.add('active');
         }
@@ -142,6 +156,9 @@ if (window.__NAV_SPA_INICIALIZADO__) {
         }
     }
 
+    // Tornar carregarSecao global para que o módulo de abas possa acessá-lo
+    window.carregarSecao = carregarSecao;
+
     /**
      * CLIQUES DE NAVEGAÇÃO
      */
@@ -196,6 +213,9 @@ if (window.__NAV_SPA_INICIALIZADO__) {
             window.logVisual(`🚀 Inicialização SPA após Firebase: ${secaoInicial}`);
         }
 
-        carregarSecao(secaoInicial);
+        // Carrega a seção inicial e então avisa que o SPA está pronto
+        carregarSecao(secaoInicial).then(() => {
+            window.dispatchEvent(new Event('SPA:ready'));
+        });
     });
 }

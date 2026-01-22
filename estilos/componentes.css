@@ -1,0 +1,124 @@
+/* ======================================================
+   SEARCH & FILTER BAR — ENTERPRISE MEDIA GRADE
+   VERSÃO: 6.0 - Fix de Alinhamento SPA e Scroll Lateral
+====================================================== */
+
+.search-bar-wrapper {
+    /* 🛡️ CORREÇÃO: Removido o sticky individual para não conflitar com o Header Group */
+    position: relative; 
+    z-index: 3500;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+}
+
+/* Área interna */
+.search-bar-inner {
+    max-width: var(--container-w);
+    margin: 0 auto;
+    padding: 12px 20px 8px; /* Ajuste fino de respiro */
+}
+
+/* ======================================================
+   SEARCH BOX
+====================================================== */
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: 46px;
+    padding: 0 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    transition: all .2s ease;
+}
+
+.search-box:focus-within {
+    background: var(--card-bg);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(193, 18, 31, 0.1); /* Glow suave com a cor primária */
+}
+
+.search-box i {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.search-box input {
+    flex: 1;
+    height: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: .2px;
+}
+
+/* ======================================================
+   FILTER BAR (ABAS)
+====================================================== */
+.filter-scroller {
+    max-width: var(--container-w);
+    margin: 0 auto;
+    padding: 10px 20px 14px;
+    
+    /* 🛡️ CORREÇÃO CRÍTICA PARA MOBILE: */
+    display: flex;
+    gap: 10px;
+    overflow-x: auto; /* Permite scroll lateral */
+    overflow-y: hidden; /* Evita quebra vertical */
+    flex-wrap: nowrap; /* Impede que as abas pulem linha ou espremam */
+    align-items: center;
+    
+    background: var(--card-bg);
+    -webkit-overflow-scrolling: touch; /* Scroll suave no iOS */
+    scrollbar-width: none;
+}
+
+.filter-scroller::-webkit-scrollbar { display: none; }
+
+/* Tag / Aba */
+.filter-tag {
+    /* 🛡️ NÃO deixa o texto encolher, forçando o scroll lateral */
+    flex: 0 0 auto; 
+    
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+    cursor: pointer;
+    color: var(--text-main);
+    white-space: nowrap;
+    transition: all .15s ease;
+}
+
+.filter-tag:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.filter-tag.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+/* ======================================================
+   SEARCH RESULTS (Mantido para compatibilidade)
+====================================================== */
+#search-results-surface {
+    position: absolute;
+    top: 100%;
+    left: 20px;
+    right: 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    max-height: 60vh;
+    overflow-y: auto;
+    display: none;
+    z-index: 5500;
+}

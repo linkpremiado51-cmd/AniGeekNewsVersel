@@ -1,0 +1,192 @@
+/* =========================================================
+   HEADER — ANI GEEK NEWS | CORPORATE MEDIA STANDARD
+   Inspired by Bloomberg, IGN, NYTimes Tech
+========================================================= */
+
+/* 🛡️ CORREÇÃO: Removi o sticky daqui para evitar conflito com o wrapper do index.html */
+.sticky-header-group {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    /* O sticky agora é controlado pelo container no index.html para agrupar tudo */
+}
+
+/* Ajuste para o Log Visual não colidir com o Header fixo */
+#log-visual-container {
+    top: calc(var(--header-h) + 10px) !important;
+}
+
+/* Header */
+header {
+    background: var(--card-bg);
+    position: relative;
+    z-index: 5001; /* Garante que o menu fique acima da barra de busca */
+}
+
+/* ======================================================
+   CONTAINER
+====================================================== */
+.nav-container {
+    max-width: var(--container-w);
+    margin: 0 auto;
+    height: var(--header-h);
+    padding: 0 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* ======================================================
+   LOGO
+====================================================== */
+.logo {
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: -0.3px;
+    color: var(--text-main);
+    text-transform: uppercase;
+}
+
+.logo span {
+    font-weight: 400;
+    opacity: 0.6;
+}
+
+/* ======================================================
+   MENU DESKTOP
+====================================================== */
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    list-style: none;
+}
+
+.nav-item a {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 6px 0;
+    transition: 0.2s;
+}
+
+.nav-item a:hover {
+    color: var(--primary);
+}
+
+/* Linha de ativo */
+.nav-item a::after {
+    content: "";
+    display: block;
+    height: 2px;
+    width: 0%;
+    background: var(--primary);
+    transition: 0.25s ease;
+    margin-top: 6px;
+}
+
+.nav-item:hover a::after {
+    width: 100%;
+}
+
+/* ======================================================
+   AÇÕES DO HEADER
+====================================================== */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sections-btn,
+.menu-toggle {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-main);
+}
+
+.sections-btn:hover,
+.menu-toggle:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* ======================================================
+   MOBILE TOGGLE
+====================================================== */
+@media (max-width: 900px) {
+    .nav-menu { display: none; }
+    .menu-toggle { 
+        display: block; 
+        border-radius: 4px;
+    }
+}
+
+/* ======================================================
+   MOBILE MENU (GAVETA)
+====================================================== */
+.mobile-menu {
+    position: fixed;
+    top: 0; /* Mudei para 0 para cobrir a tela toda se necessário */
+    right: -100%;
+    width: 85%; /* Um pouco menor para ver o fundo */
+    height: 100vh;
+    background: var(--card-bg);
+    z-index: 6000;
+    padding: 60px 30px 30px;
+    overflow-y: auto;
+    transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: -10px 0 30px rgba(0,0,0,0.3);
+}
+
+.mobile-menu.active {
+    right: 0;
+}
+
+.mobile-menu-item {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-main);
+}
+
+.close-menu {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: 1px solid var(--border);
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    color: var(--text-main);
+    cursor: pointer;
+}
+
+/* ======================================================
+   BOTÃO VOLTAR
+====================================================== */
+.btn-voltar-estilizado {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 10px 18px !important;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+    color: var(--text-main);
+}
+
+.btn-voltar-estilizado:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}

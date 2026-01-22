@@ -1,0 +1,106 @@
+<div class="destaque-wrapper" data-root="futebol">
+  <link rel="stylesheet" href="./modulos/modulos_futebol/futebol_estilo.css">
+
+  <div id="capa-editorial-futebol" class="capa-editorial-block">
+    <div class="capa-content-inner">
+      <h1 id="capa-titulo-futebol" class="capa-title">Futebol Profissional</h1>
+      <p id="capa-descricao-futebol" class="capa-desc">Acompanhe as últimas notícias, análises táticas e o mercado da bola.</p>
+      <div class="subcategorias-tags" id="subcategorias-container-futebol">
+          </div>
+    </div>
+  </div>
+
+  <div id="container-futebol-principal" class="feed-futebol-grid">
+    <div class="loader-secao" style="text-align:center; padding:100px; color:var(--text-muted);">
+      <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: #1a8f00;"></i>
+      <p style="margin-top:15px; font-weight:700; letter-spacing:1px;">CONECTANDO AO ESTÁDIO...</p>
+    </div>
+  </div>
+
+  <div id="comentarios-futebol-integrada" class="comentarios-secao-integrada">
+    </div>
+
+  <div id="futebol-pagination-modulo" class="container-carregar-mais"></div>
+  
+  <style>
+    /* Identidade visual específica para futebol */
+    .destaque-wrapper[data-root="futebol"] {
+      padding-top: 20px;
+      min-height: 100vh;
+      position: relative; 
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .comentarios-secao-integrada {
+      max-width: var(--container-w);
+      margin: 0 auto;
+      padding: 0 20px;
+      position: relative; 
+      z-index: 50;
+    }
+
+    .capa-editorial-block { 
+      width: 100%; 
+      padding: 0 20px; 
+      margin: 0 auto 40px auto; 
+      max-width: var(--container-w); 
+    }
+
+    .capa-content-inner { 
+      background: var(--card-bg); 
+      border: 1px solid var(--border); 
+      border-radius: var(--radius); 
+      padding: 40px 20px; 
+      text-align: center; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+
+    .capa-title { 
+      font-size: clamp(2rem, 6vw, 3.5rem); 
+      font-weight: 900; 
+      color: var(--text-main); 
+      margin-bottom: 10px; 
+    }
+
+    .capa-desc { 
+      max-width: 600px; 
+      margin: 0 auto 25px auto; 
+      color: var(--text-muted); 
+      font-size: 1.1rem;
+    }
+    
+    /* Cor temática do futebol (verde) no botão de paginação */
+    .btn-paginacao-futebol { 
+      display: inline-flex;
+      align-items: center; 
+      gap: 12px; 
+      background: #1a8f00 !important; 
+      color: #fff !important; 
+      border: none; 
+      padding: 16px 40px; 
+      border-radius: 50px; 
+      cursor: pointer; 
+      font-weight: 800; 
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+      margin: 40px auto; 
+      box-shadow: 0 8px 20px rgba(26, 143, 0, 0.3);
+    }
+
+    .feed-futebol-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      max-width: var(--container-w);
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+  </style>
+</div>

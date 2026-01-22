@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AniGeekNews.com | Jornalismo Geek</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Cormorant+Garamond:wght@400;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <link rel="stylesheet" href="estilos/geral.css">
+    <link rel="stylesheet" href="estilos/cabecalho-rodape.css">
+    <link rel="stylesheet" href="estilos/componentes.css">
+    <link rel="stylesheet" href="estilos/modal-pesquisa.css">
+    
+    <link rel="stylesheet" href="comentarios_de_secao/comentarios_estilo.css">
+    <link rel="stylesheet" href="modulos/modulos_analises/analises_estilo.css">
+
+    <style>
+        /* Estilos da Gaveta de Sugestões (Autocomplete) */
+        .search-bar-wrapper { position: relative; }
+        #search-suggestions-drawer {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: var(--card-bg, #1a1a1a);
+            border: 1px solid var(--border, #333);
+            border-top: none;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 9999;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+        #search-suggestions-drawer.active { display: block; }
+        .suggestion-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .suggestion-item:hover { background: rgba(138, 43, 226, 0.15); }
+        .suggestion-item i { color: #8A2BE2; width: 20px; text-align: center; }
+        .suggestion-title { font-size: 14px; font-weight: 600; color: var(--text-main, #fff); }
+
+        /* 🛡️ CORREÇÕES DE LAYOUT SPA */
+        .sticky-nav-group {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+        }
+
+        #dynamic-content {
+            min-height: 80vh;
+            display: block;
+            overflow: visible; /* Garante que o botão carregar mais não seja cortado */
+            padding-bottom: 60px; /* Espaço para o botão respirar no final */
+        }
+
+        /* Garante que o container de paginação injetado seja visível */
+        .container-carregar-mais {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 40px 0;
+            clear: both;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="progress-bar"></div>
+<div id="megaMenuContainer"></div>
+
+<div id="toast-copiado" class="toast-aviso">
+    <i class="fa-solid fa-check-circle"></i> Link copiado para a área de transferência!
+</div>
+
+<div class="sticky-nav-group">
+    <header>
+        <div class="nav-container">
+            <a href="./index.html" class="logo">AniGeek<span>News</span></a>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="#" data-section="manchetes">Manchetes</a></li>
+                <li class="nav-item"><a href="#" data-section="analises">Análises</a></li>
+                <li class="nav-item"><a href="#" data-section="tecnologia">Tecnologia</a></li>
+                <li class="nav-item" id="area-usuario"></li> 
+            </ul>
+            <button class="menu-toggle" onclick="abrirMegaMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="search-bar-wrapper">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="input-busca-global" placeholder="Pesquisar notícias ou análises..." autocomplete="off">
+        </div>
+        <div id="search-suggestions-drawer"></div>
+    </div>
+    
+    <div class="filter-scroller" id="filterScroller">
+        <div class="filter-tag active" data-section="manchetes">Tudo</div>
+        <div class="filter-tag" data-section="analises">Análises</div>
+        <div class="filter-tag" data-section="smartphones">Smartphones</div>
+    </div>
+</div>
+
+<main id="dynamic-content">
+    <div style="text-align:center; padding:100px; color:var(--text-muted);">
+        <i class="fa-solid fa-circle-notch fa-spin"></i> Sincronizando Portal...
+    </div>
+</main>
+
+<script type="module" src="scripts/config-firebase.js"></script>
+<script type="module" src="scripts/auth.js"></script> 
+<script type="module" src="scripts/tema.js"></script>
+<script type="module" src="scripts/modal-manager.js"></script>
+<script type="module" src="scripts/busca.js"></script>
+
+<script type="module" src="comentarios_de_secao/comentarios_principal.js"></script>
+<script type="module" src="scripts/navegacao.js"></script>
+<script src="scripts/recomendacao-secao.js"></script>
+
+<script type="module">
+    import { inicializarMegaMenu } from './menu/menu.js';
+    inicializarMegaMenu();
+</script>
+
+</body>
+</html>

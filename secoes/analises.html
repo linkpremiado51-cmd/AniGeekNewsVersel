@@ -1,0 +1,105 @@
+<div class="destaque-wrapper" data-root="analises">
+  <link rel="stylesheet" href="./modulos/modulos_analises/analises_estilo.css">
+
+  <div id="capa-editorial" class="capa-editorial-block">
+    <div class="capa-content-inner">
+      <h1 id="capa-titulo" class="capa-title">Análises Profundas</h1>
+      <p id="capa-descricao" class="capa-desc">Explorações detalhadas sobre a cultura pop e tecnologia.</p>
+      <div class="subcategorias-tags" id="subcategorias-container">
+          </div>
+    </div>
+  </div>
+
+  <div id="container-principal" class="feed-analises-grid">
+    <div class="loader-secao" style="text-align:center; padding:100px; color:var(--text-muted);">
+      <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--accent-analysis);"></i>
+      <p style="margin-top:15px; font-weight:700; letter-spacing:1px;">SINCRONIZANDO DATABASE...</p>
+    </div>
+  </div>
+
+  <div id="comentarios-secao-integrada" class="comentarios-secao-integrada">
+    </div>
+
+  <div id="novo-pagination-modulo" class="container-carregar-mais"></div>
+  
+  <style>
+    .destaque-wrapper {
+      padding-top: 20px;
+      min-height: 100vh;
+      position: relative; 
+      /* Animação de entrada suave da seção */
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .comentarios-secao-integrada {
+      max-width: var(--container-w);
+      margin: 0 auto;
+      padding: 0 20px;
+      position: relative; 
+      z-index: 50;
+    }
+
+    .capa-editorial-block { 
+      width: 100%; 
+      padding: 0 20px; 
+      margin: 0 auto 40px auto; 
+      max-width: var(--container-w); 
+    }
+
+    .capa-content-inner { 
+      background: var(--card-bg); 
+      border: 1px solid var(--border); 
+      border-radius: var(--radius); 
+      padding: 40px 20px; 
+      text-align: center; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+
+    .capa-title { 
+      font-size: clamp(2rem, 6vw, 3.5rem); 
+      font-weight: 900; 
+      color: var(--text-main); 
+      margin-bottom: 10px; 
+    }
+
+    .capa-desc { 
+      max-width: 600px; 
+      margin: 0 auto 25px auto; 
+      color: var(--text-muted); 
+      font-size: 1.1rem;
+    }
+    
+    .btn-paginacao-geek { 
+      display: inline-flex;
+      align-items: center; 
+      gap: 12px; 
+      background: var(--accent-analysis) !important; 
+      color: #fff !important; 
+      border: none; 
+      padding: 16px 40px; 
+      border-radius: 50px; 
+      cursor: pointer; 
+      font-weight: 800; 
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+      margin: 40px auto; 
+      box-shadow: 0 8px 20px rgba(138, 43, 226, 0.3);
+    }
+
+    .feed-analises-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      max-width: var(--container-w);
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+  </style>
+</div>

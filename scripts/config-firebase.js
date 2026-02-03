@@ -20,23 +20,18 @@ window.noticiasFirebase = [];
 let linkProcessado = false;
 
 /**
- * Função auxiliar para logs visuais seguros
- */
-function avisar(msg) {
-    if (window.logVisual) window.logVisual(msg);
-    console.log(msg);
-}
-
-/**
  * Normaliza os dados extraindo a imagem (thumb) e formatando o vídeo.
  */
 function normalizarNoticia(doc, nomeColecao) {
     const data = doc.data();
     
+    // 1. Lógica de extração da Imagem (Thumb)
+    // Prioridade: Raiz > Primeiro item de Relacionados > Fallback
     const imagemExtraida = data.thumb || 
                           (data.relacionados && data.relacionados.length > 0 ? data.relacionados[0].thumb : null) || 
                           'https://anigeeknews.com/default-og.jpg';
 
+    // 2. Lógica de formatação do Vídeo Principal
     let videoUrl = data.videoPrincipal || "";
     if (videoUrl.includes("watch?v=")) {
         videoUrl = videoUrl.replace("watch?v=", "embed/") + "?autoplay=1&mute=1&modestbranding=1";
@@ -61,7 +56,6 @@ window.verificarGatilhoDeLink = function() {
         const noticiaEncontrada = window.noticiasFirebase.find(n => n.id === idDesejado);
         
         if (noticiaEncontrada && typeof window.abrirModalNoticia === 'function') {
-            avisar(`[DeepLink] Abrindo: ${idDesejado}`);
             window.abrirModalNoticia(noticiaEncontrada);
             linkProcessado = true; 
         }
@@ -70,32 +64,20 @@ window.verificarGatilhoDeLink = function() {
 
 function sincronizarComBusca(nomeColecao) {
     onSnapshot(collection(db, nomeColecao), (snapshot) => {
-        // Limpa dados antigos da mesma origem para evitar duplicados
+        // Remove dados antigos daquela coleção específica para evitar duplicatas
         window.noticiasFirebase = window.noticiasFirebase.filter(item => item.origem !== nomeColecao);
         
+        // Mapeia e normaliza os novos dados
         const novosDados = snapshot.docs.map(doc => normalizarNoticia(doc, nomeColecao));
+        
         window.noticiasFirebase.push(...novosDados);
         
-        // Ordenação por timestamp (prioritário) ou campo data
-        window.noticiasFirebase.sort((a, b) => (b.timestamp || b.data || 0) - (a.timestamp || a.data || 0));
-
-        // PONTO CRÍTICO: Dispara o evento que os módulos (Futebol/Análises) estão ouvindo
-        window.dispatchEvent(new CustomEvent('firebase:data_updated', { 
-            detail: { origem: nomeColecao, total: window.noticiasFirebase.length } 
-        }));
-
-        if (snapshot.metadata.fromCache) {
-            avisar(`[Cache] ${nomeColecao} ok.`);
-        } else {
-            avisar(`[Nuvem] ${nomeColecao} atualizado.`);
-        }
+        // Reordena por data
+        window.noticiasFirebase.sort((a, b) => (b.data || 0) - (a.data || 0));
 
         if (!linkProcessado) window.verificarGatilhoDeLink();
         
-    }, (error) => {
-        avisar(`❌ Erro Firebase (${nomeColecao})`);
-        console.error(error);
-    });
+    }, (error) => console.error(`Erro ao sincronizar ${nomeColecao}:`, error));
 }
 
 const colecoesParaMonitorar = ["noticias", "lancamentos", "analises", "entrevistas", "podcast", "futebol"];
@@ -103,4 +85,4 @@ colecoesParaMonitorar.forEach(nome => sincronizarComBusca(nome));
 
 window.addEventListener('popstate', window.verificarGatilhoDeLink);
 
-avisar("🔥 Firebase: Sincronização v9 Ativa");
+console.log("🔥 Firebase Config: Sincronização inteligente com suporte a sub-propriedades ativado.");

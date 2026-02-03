@@ -1,99 +1,53 @@
+/* scripts/tema.js */
+
+// Seleção dos elementos de alternância de tema
+const themeToggle = document.getElementById('mobileThemeToggle');
+
 /**
- * ARQUIVO: scripts/tema.js
- * PAPEL: Orquestrador de UI, Temas e Sincronização Cromática
- * VERSÃO: 9.0 - Suporte a Variáveis Dinâmicas e Router Sync
+ * Aplica o tema visual no Body e atualiza o estado do switch se ele existir
  */
+function aplicarTema(modo) {
+    if (modo === 'dark') {
+        document.body.classList.add('dark-mode');
+        if (themeToggle) themeToggle.checked = true;
+    } else {
+        document.body.classList.remove('dark-mode');
+        if (themeToggle) themeToggle.checked = false;
+    }
+}
 
-(function() {
-    /**
-     * SISTEMA DE LOGS VISUAIS GLOBAIS
-     * Útil para debug em mobile onde o console não é acessível.
-     */
-    window.logVisual = function(mensagem) {
-        let container = document.getElementById('log-visual-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'log-visual-container';
-            document.body.appendChild(container);
-        }
+/**
+ * Alterna entre light e dark e salva no localStorage
+ */
+function alternarTema() {
+    const modoAtual = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
+    localStorage.setItem('pref-theme', modoAtual);
+    aplicarTema(modoAtual);
+    console.log(`Tema definido como: ${modoAtual}`);
+}
 
-        const entrada = document.createElement('div');
-        entrada.className = 'log-entry';
-        entrada.innerText = `> ${mensagem}`;
-        container.prepend(entrada);
-
-        setTimeout(() => {
-            if (entrada.parentNode) entrada.remove();
-        }, 5000);
-    };
-
-    const themeToggle = document.getElementById('mobileThemeToggle');
-
-    /**
-     * Alterna entre Light e Dark Mode
-     * Ponto 7: Persistência de preferência
-     */
-    function alternarTema() {
-        const isDark = document.body.classList.toggle('dark-mode');
-        const modoAtivo = isDark ? 'dark' : 'light';
-        
-        localStorage.setItem('pref-theme', modoAtivo);
-        
-        // Dispara evento para que outros componentes (como gráficos) se ajustem
-        window.dispatchEvent(new CustomEvent('ui:theme_changed', { detail: { theme: modoAtivo } }));
-        
-        if (window.logVisual) window.logVisual(`Modo ${modoAtivo} aplicado.`);
+/**
+ * Inicializa a preferência do usuário
+ */
+function inicializarTema() {
+    const temaSalvo = localStorage.getItem('pref-theme');
+    
+    // Se não houver tema salvo, verifica preferência do sistema, se desejar. 
+    // Por enquanto, manteremos o padrão light caso não haja salvo.
+    if (temaSalvo) {
+        aplicarTema(temaSalvo);
     }
 
-    /**
-     * Carrega a preferência salva ou respeita o sistema operacional
-     */
-    function inicializarTema() {
-        const temaSalvo = localStorage.getItem('pref-theme');
-        const prefereDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        if (temaSalvo === 'dark' || (!temaSalvo && prefereDark)) {
-            document.body.classList.add('dark-mode');
-            if (themeToggle) themeToggle.checked = true;
-        }
-    }
-
-    /**
-     * Lógica da Barra de Progresso e Botão Topo
-     * Ponto 3: Feedback visual de leitura
-     */
-    function gerenciarScroll() {
-        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
-        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-        const scrolled = (winScroll / height) * 100;
-        
-        const progressBar = document.getElementById("progress-bar");
-        const btnTopo = document.getElementById("btn-voltar-topo");
-
-        if (progressBar) {
-            progressBar.style.width = scrolled + "%";
-            // A cor da barra agora vem do --tema-cor definido no customizacao-abas.js
-            progressBar.style.backgroundColor = 'var(--tema-cor, #8A2BE2)';
-        }
-
-        if (btnTopo) {
-            btnTopo.style.display = winScroll > 300 ? "flex" : "none";
-        }
-    }
-
-    // listeners
+    // Adiciona o evento de clique apenas se o botão existir na página
     if (themeToggle) {
         themeToggle.addEventListener('change', alternarTema);
     }
+}
 
-    window.addEventListener('scroll', gerenciarScroll, { passive: true });
+// Lógica do botão de voltar ao topo (Global)
+window.scrollToTop = function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
 
-    window.scrollToTop = function() {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    // Inicialização
-    inicializarTema();
-    if (window.logVisual) window.logVisual("Engine de UI v9.0 Ativa.");
-
-})();
+// Executa a inicialização do tema
+inicializarTema();

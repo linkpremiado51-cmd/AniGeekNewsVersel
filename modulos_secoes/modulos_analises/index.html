@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análises | AniGeekNews</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Merriweather:wght@300;400;700&family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <link rel="stylesheet" href="../../estilos/geral.css">
+    <link rel="stylesheet" href="../../estilos/secoes/analises.css">
+
+    <style>
+        /* --- SISTEMA DE LOGS PROFISSIONAL --- */
+        #debug-container-geek {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 1000000;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        #painel-debug-geek {
+            width: 320px;
+            height: 450px;
+            background: rgba(13, 13, 13, 0.96);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            display: none; /* Inicia fechado */
+            flex-direction: column;
+            margin-bottom: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        #logs-header {
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.03);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        #logs-lista {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            font-family: 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 11px;
+            line-height: 1.6;
+            color: #d1d1d1;
+        }
+
+        /* Estilização dos tipos de Log */
+        .log-entry { 
+            margin-bottom: 8px; 
+            padding-bottom: 4px; 
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            word-wrap: break-word;
+        }
+        .log-time { color: #666; margin-right: 8px; font-size: 9px; }
+        .log-info { color: #00ff95; }
+        .log-error { color: #ff4d4d; background: rgba(255, 77, 77, 0.1); border-radius: 2px; }
+        .log-warn { color: #ffcc00; }
+
+        #btn-log-toggle {
+            width: 55px;
+            height: 55px;
+            border-radius: 18px;
+            background: #111;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s ease;
+        }
+
+        #btn-log-toggle:hover {
+            transform: scale(1.05);
+            background: #e63946;
+            border-color: #e63946;
+        }
+
+        /* Scrollbar Customizado para o Painel */
+        #logs-lista::-webkit-scrollbar { width: 4px; }
+        #logs-lista::-webkit-scrollbar-track { background: transparent; }
+        #logs-lista::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<div class="sticky-header-group">
+    
+    <header>
+        <div class="nav-container">
+            <a href="./index.html" class="logo">AniGeeknewsv3.com<span></span></a>
+            
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="#">Animes</a></li>
+                <li class="nav-item"><a href="#">Games</a></li>
+                <li class="nav-item"><a href="#">Mangás</a></li>
+                <li class="nav-item" id="area-usuario"><span>Aguardando...</span></li>
+            </ul>
+
+            <div class="header-actions">
+                <button class="sections-btn" onclick="toggleMobileMenu()">
+                    <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+                </button>
+                <button class="menu-toggle" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="search-bar-wrapper">
+        <div class="search-bar-inner">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="input-busca-global" placeholder="Pesquisar notícias, animes ou análises..." autocomplete="off">
+            </div>
+            <div id="search-results-surface"></div>
+        </div>
+    </div>
+
+    <div class="filter-scroller" id="filterScroller"></div>
+</div>
+
+<div class="mobile-menu" id="mobileMenu">
+    <button class="close-menu" onclick="toggleMobileMenu()">×</button>
+    <div id="container-menu-perfil"></div>
+    <div class="mobile-menu-item"><a href="./index.html">Início</a></div>
+    <div class="mobile-menu-item"><a href="#">Animes</a></div>
+    <div class="mobile-menu-item"><a href="#">Games</a></div>
+    <div class="mobile-menu-item"><a href="#">Mangás</a></div>
+    
+    <div class="theme-toggle-container" style="margin-top: 20px;">
+        <span id="mobileThemeLabel" style="font-weight: bold; font-size: 12px;">TEMA ESCURO</span>
+        <label class="theme-toggle">
+            <input type="checkbox" id="mobileThemeToggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+</div>
+
+    <div id="debug-container-geek">
+        <div id="painel-debug-geek">
+            <div id="logs-header">
+                <span style="color: #eee; font-size: 11px; font-weight: 800; letter-spacing: 1px;">DEBUG CONSOLE</span>
+                <button onclick="document.getElementById('logs-lista').innerHTML = ''" style="background: rgba(255,255,255,0.05); border: none; color:#aaa; cursor:pointer; font-size:9px; padding: 4px 8px; border-radius: 4px;">Limpar</button>
+            </div>
+            <div id="logs-lista">
+                <div class="log-entry"><span class="log-info">></span> Sistema de Monitoramento Ativo...</div>
+            </div>
+        </div>
+        <button id="btn-log-toggle" onclick="toggleLogs()">
+            <i class="fa-solid fa-terminal"></i>
+        </button>
+    </div>
+
+    <script>
+        function toggleLogs() {
+            const painel = document.getElementById('painel-debug-geek');
+            const display = window.getComputedStyle(painel).display;
+            painel.style.display = (display === 'none') ? 'flex' : 'none';
+        }
+
+        (function() {
+            const lista = document.getElementById('logs-lista');
+            function addLog(msg, type = 'log') {
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                if(type === 'error') entry.classList.add('log-error');
+                if(type === 'warn') entry.classList.add('log-warn');
+                const time = new Date().toLocaleTimeString([], { hour12: false });
+                entry.innerHTML = `<span class="log-time">[${time}]</span><span class="${type === 'log' ? 'log-info' : ''}">${msg}</span>`;
+                lista.appendChild(entry);
+                lista.scrollTop = lista.scrollHeight;
+            }
+            const oldLog = console.log;
+            console.log = function() { addLog(Array.from(arguments).join(' '), 'log'); oldLog.apply(console, arguments); };
+            const oldError = console.error;
+            console.error = function() { addLog(Array.from(arguments).join(' '), 'error'); oldError.apply(console, arguments); };
+            const oldWarn = console.warn;
+            console.warn = function() { addLog(Array.from(arguments).join(' '), 'warn'); oldWarn.apply(console, arguments); };
+            window.onerror = function(msg, url, line) { addLog(`CRITICAL ERROR: ${msg} (Linha: ${line})`, 'error'); return false; };
+        })();
+    </script>
+
+    <div class="container-app">
+        <div id="notificacao-novo-artigo">
+            <i class="fa-solid fa-satellite-dish" style="color: #e63946;"></i>
+            <div>
+                <div style="font-size: 8px; font-weight: 800; opacity: 0.6; text-transform: uppercase;">Sincronizado com Firebase</div>
+                <div id="novo-artigo-titulo" style="font-size: 11px; font-weight: 700;">Aguardando nova análise...</div>
+            </div>
+        </div>
+
+        <div id="hero-area"></div>
+
+        <div id="container-principal">
+            <p id="status-motor" style="text-align: center; padding: 100px; opacity: 0.5;">
+                <i class="fa-solid fa-gear fa-spin"></i><br>
+                Iniciando motor modular...
+            </p>
+        </div>
+
+        <div id="pagination-control" style="text-align: center; padding: 40px; display: none;">
+            <button id="btn-carregar-mais" style="cursor: pointer; padding: 15px 30px; border: 1px solid #333; background: none; color: #111; border-radius: 5px; font-weight: bold; text-transform: uppercase;">
+                Carregar mais
+            </button>
+        </div>
+    </div>
+
+    <div id="modal-noticia" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; overflow-y:auto;">
+        <div id="modal-conteudo" style="background:#fff; max-width:800px; margin:20px auto; padding:20px; border-radius:12px; position:relative;">
+            <button id="modal-fechar" onclick="document.getElementById('modal-noticia').style.display='none'" style="position:absolute; top:10px; right:10px; background:none; border:none; color:#111; font-size:30px; cursor:pointer;">&times;</button>
+            <div id="modal-dinamico-container"></div>
+        </div>
+    </div>
+
+    <div id="toast-copiado">Copiado com sucesso!</div>
+
+    <script type="module" src="./inicializador-do-site.js"></script>
+
+    <style>
+        /* --- VARIÁVEIS GLOBAIS --- */
+        :root {
+            --card-bg: #fff;
+            --bg: #fdfdfd;
+            --border: #ddd;
+            --text-main: #202020;
+            --text-muted: #888;
+            --primary: #c1121f;
+            --header-h: 49px;
+            --container-w: 840px;
+        }
+
+        body.dark-mode {
+            --card-bg: #111;
+            --bg: #111;
+            --border: #333;
+            --text-main: #e0e0e0;
+            --primary: #ff4444;
+        }
+
+        .sticky-header-group {
+            position: sticky;
+            top: 0;
+            z-index: 5000;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        header { background: var(--card-bg); position: relative; z-index: 5001; }
+        .nav-container { max-width: var(--container-w); margin: 0 auto; height: var(--header-h); padding: 0 14px; display: flex; align-items: center; justify-content: space-between; }
+        .logo { font-size: 14px; font-weight: 900; text-transform: uppercase; color: var(--text-main); letter-spacing: -0.5px; }
+        .nav-menu { display: flex; gap: 20px; list-style: none; }
+        .nav-item a { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); transition: 0.2s; }
+        .nav-item a:hover { color: var(--primary); }
+        .sections-btn, .menu-toggle { background: transparent; border: 1px solid var(--border); padding: 6px 10px; cursor: pointer; color: var(--text-main); font-size: 10px; display: flex; align-items: center; gap: 3px; }
+        .menu-toggle { display: none; }
+
+        .search-bar-wrapper { background: var(--card-bg); border-bottom: 1px solid var(--border); z-index: 4999; }
+        .search-bar-inner { max-width: var(--container-w); margin: 0 auto; padding: 10px 14px; }
+        .search-box { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; transition: all 0.2s ease; }
+        .search-box input { flex: 1; border: none; background: transparent; outline: none; font-size: 11px; font-weight: 600; color: var(--text-main); }
+        .search-box i { color: var(--text-muted); font-size: 12px; }
+        #search-results-surface { position: absolute; top: 100%; left: 0; right: 0; background: var(--card-bg); border: 1px solid var(--border); border-top: none; max-height: 60vh; overflow-y: auto; display: none; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+
+        .filter-scroller { max-width: var(--container-w); margin: 0 auto; padding: 8px 14px; display: flex; gap: 8px; overflow-x: auto; background: var(--card-bg); scrollbar-width: none; }
+        .filter-scroller::-webkit-scrollbar { display: none; }
+        .filter-tag { background: transparent; border: 1px solid var(--border); padding: 6px 12px; font-size: 9px; font-weight: 800; text-transform: uppercase; cursor: pointer; color: var(--text-main); white-space: nowrap; transition: 0.2s; }
+        .filter-tag:hover, .filter-tag.active { border-color: var(--primary); color: var(--primary); }
+        .filter-tag.active { background: var(--primary); color: #fff; }
+
+        .mobile-menu { position: fixed; top: 0; right: -100%; width: 80%; height: 100vh; background: var(--card-bg); z-index: 6000; padding: 20px; transition: 0.3s ease; box-shadow: -5px 0 20px rgba(0,0,0,0.2); border-left: 1px solid var(--border); }
+        .mobile-menu.active { right: 0; }
+        .mobile-menu-item { padding: 15px 0; border-bottom: 1px solid var(--border); font-weight: 700; text-transform: uppercase; font-size: 11px; }
+        .close-menu { position: absolute; top: 15px; right: 15px; background: transparent; border: 1px solid var(--border); width: 30px; height: 30px; cursor: pointer; color: var(--text-main); }
+
+        @media (max-width: 900px) { .nav-menu { display: none; } .menu-toggle { display: flex; } }
+    </style>
+
+    <script>
+        /* ======================================================
+           CORE DO HEADER: BUSCA E NAVEGAÇÃO BÁSICA
+        ====================================================== */
+        window.toggleMobileMenu = () => {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('active');
+        };
+
+        const inputBusca = document.getElementById('input-busca-global');
+        const surface = document.getElementById('search-results-surface');
+        let timeoutBusca = null;
+
+        if (inputBusca) {
+            inputBusca.addEventListener('input', (e) => {
+                clearTimeout(timeoutBusca);
+                const termo = e.target.value.toLowerCase().trim();
+                if (termo === "") { surface.style.display = 'none'; return; }
+                timeoutBusca = setTimeout(() => {
+                    const bancoDeDados = window.todasAsNoticias || [];
+                    const filtradas = bancoDeDados.filter(n => {
+                        const titulo = (n.titulo || "").toLowerCase();
+                        const cat = (n.categoria || "").toLowerCase();
+                        return titulo.includes(termo) || cat.includes(termo);
+                    }).slice(0, 5);
+                    if (filtradas.length === 0) {
+                        surface.innerHTML = '<div style="padding:15px; font-size:11px; color:var(--text-muted); text-align:center;">Sem resultados.</div>';
+                    } else {
+                        surface.innerHTML = filtradas.map(news => `
+                            <div class="result-item-list" onclick="window.abrirNoticiaEmModal(window.todasAsNoticias.find(n=>n.id=='${news.id}')); surface.style.display='none';" 
+                                 style="cursor:pointer; display:flex; align-items:center; gap:10px; padding:10px; border-bottom:1px solid var(--border);">
+                                <img src="${news.thumb || news.capaNoticia || news.capaUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;">
+                                <div>
+                                   <div style="font-size:8px; font-weight:900; color:var(--primary); text-transform:uppercase;">${news.categoria}</div>
+                                   <div style="font-size:11px; font-weight:700; color:var(--text-main); line-height:1.2;">${news.titulo}</div>
+                                </div>
+                            </div>`).join('');
+                    }
+                    surface.style.display = 'block';
+                }, 300);
+            });
+        }
+        
+        // Toda a lógica de abas (Seção v7) foi removida daqui, 
+        // pois agora reside em gerenciador-abas.js
+    </script>
+</body>
+</html>

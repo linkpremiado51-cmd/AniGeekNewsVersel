@@ -1,4 +1,15 @@
-/* --- GERAL.CSS CONFIGURAÇÕES GLOBAIS E VARIÁVEIS --- */
+
+                        <!DOCTYPE html>
+                        <html lang="en">
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                body {
+                  background-color: white; /* Ensure the iframe has a white background */
+                }
+
+                /* --- CONFIGURAÇÕES GLOBAIS E VARIÁVEIS --- */
 :root {
     --nyt-black: #121212;
     --nyt-ink: #202020;
@@ -7,7 +18,7 @@
     --nyt-off-white: #fdfdfd;
     --nyt-paper: #fff;
     --accent-news: #c1121f;
-    --accent-analysis: #8A2BE2; /* Roxo para Análises */
+    --accent-analysis: #000;
     --accent-feature: #2c5282;
     --primary: var(--accent-news);
     --bg: var(--nyt-off-white);
@@ -17,9 +28,9 @@
     --border: #ddd;
     --img-filter: grayscale(15%) contrast(95%) sepia(5%);
     --img-hover: grayscale(0%) contrast(100%) sepia(0%);
-    --header-h: 70px;
+    --header-h: 49px;
     --radius: 0px;
-    --container-w: 1200px;
+    --container-w: 840px;
     --ease-editorial: cubic-bezier(0.25, 0.46, 0.45, 0.94);
     --duration: 0.4s;
     --font-serif: "Merriweather", Georgia, serif;
@@ -38,35 +49,6 @@ body.dark-mode {
     --nyt-off-white: #111;
     --img-filter: grayscale(20%) brightness(80%);
 }
-
-/* --- SISTEMA DE LOGS VISUAIS --- */
-#log-visual-container {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    z-index: 100000; 
-    pointer-events: none; 
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.log-entry {
-    background: rgba(0, 0, 0, 0.85);
-    color: #00ff00; 
-    font-family: monospace;
-    font-size: 10px;
-    padding: 6px 12px;
-    border-radius: 4px;
-    border-left: 3px solid var(--accent-analysis);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    animation: fadeInLog 0.3s ease-out, fadeOutLog 0.5s ease-in 4.5s forwards;
-    max-width: fit-content;
-}
-
-@keyframes fadeInLog { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
-@keyframes fadeOutLog { to { opacity: 0; transform: translateY(-10px); } }
 
 /* --- RESETS E ESTRUTURA BASE --- */
 * { 
@@ -87,61 +69,25 @@ body {
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     transition: background var(--duration) var(--ease-editorial), color var(--duration) var(--ease-editorial);
-    
-    /* 🛡️ CORREÇÃO: Removido overflow-x: hidden que causava "travamento" do scroll lateral das abas */
-    overflow-x: visible; 
-    min-height: 100vh;
 }
 
-/* --- ESTILO PARA O BOTÃO CARREGAR MAIS (Sincronizado) --- */
-.container-carregar-mais {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    padding: 20px 20px 80px; /* Mais respiro no rodapé */
-}
-
-.btn-carregar-mais, .btn-paginacao-geek {
-    background: var(--text-main);
-    border: 1px solid var(--text-main);
-    padding: 14px 34px;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-size: 11px;
-    cursor: pointer;
-    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    color: var(--bg);
-    border-radius: 4px; /* Leve arredondado corporativo */
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.btn-carregar-mais:hover, .btn-paginacao-geek:hover {
-    background: transparent;
-    color: var(--primary);
-    border-color: var(--primary);
-    transform: translateY(-2px);
-}
-
-/* --- ELEMENTOS DE UTILIDADE --- */
+/* --- ELEMENTOS DE UTILIDADE (Progress Bar e Botão Topo) --- */
 #progress-bar {
     position: fixed;
     top: 0;
     left: 0;
-    height: 3px;
+    height: 2.1px;
     background: var(--primary);
     width: 0%;
-    z-index: 10000;
+    z-index: 1001;
     transition: width 0.1s;
 }
 
 .back-to-top {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
-    padding: 15px;
+    bottom: 21px;
+    right: 21px;
+    padding: 10.5px;
     background: var(--text-main);
     color: var(--bg);
     border: none;
@@ -151,15 +97,15 @@ body {
     z-index: 100;
 }
 
-/* 🛡️ CORREÇÃO CRÍTICA: 
-   O conteúdo NÃO deve sumir na busca em uma SPA, 
-   apenas as notícias não filtradas devem ser removidas pelo JS. */
-.search-active #dynamic-content {
-    display: block !important; 
-}
 
-/* Garante que o conteúdo não fique "por baixo" do header fixo */
-main {
-    position: relative;
-    z-index: 1;
-}
+              </style>
+                        </head>
+                        <body>
+                            
+
+              <script>
+                              
+              </script>
+                        </body>
+                        </html>
+                    

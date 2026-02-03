@@ -1,171 +1,272 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+          <!-- ===== VERIFICAÇÕES ===== -->
+<!-- =====   <meta name="monetag" content="e06df971ba6dd42eb5581027c13cb0a7"> ===== -->
+    <meta name="ppck-ver" content="68939c8da52b56e7fdbd2814436b04db" />
+    <meta name="6a97888e-site-verification" content="ccb57535b53ed6b31254339d34d7ea73">
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AniGeekNews.com | Jornalismo Geek</title>
-    
+
+    <title>AniGeekNews | Jornalismo Geek</title>
+    <meta name="description" content="Jornalismo independente sobre cultura pop, animes, games e cinema.">
+
+    <meta name="referrer" content="no-referrer-when-downgrade">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Cormorant+Garamond:wght@400;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <link rel="stylesheet" href="estilos/geral.css">
     <link rel="stylesheet" href="estilos/cabecalho-rodape.css">
     <link rel="stylesheet" href="estilos/componentes.css">
-    <link rel="stylesheet" href="estilos/modal-pesquisa.css">
-    
-    <link rel="stylesheet" href="comentarios_de_secao/comentarios_estilo.css">
-    <link rel="stylesheet" href="modulos/modulos_analises/analises_estilo.css">
 
     <style>
-        /* 🎨 VARIÁVEL MESTRE: Controlada pelo scripts/customizacao-abas.js */
-        :root {
-            --tema-cor: #8A2BE2; /* Cor padrão inicial */
+        html { scroll-behavior: smooth; }
+        #progress-bar {
+            position: fixed; top: 0; left: 0; height: 3px;
+            background: var(--primary-color, #e50914);
+            width: 0%; z-index: 9999; transition: width 0.3s ease;
+        }
+        .top-banner-ad {
+            width: 100%; display: flex; justify-content: center; align-items: center;
+            background: var(--bg-body); padding: 8px 0; border-bottom: 1px solid var(--border-ui); z-index: 9998;
+        }
+        
+        #conteudo_de_destaque {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Estilos da Gaveta de Sugestões (Autocomplete) */
-        .search-bar-wrapper { position: relative; }
-        #search-suggestions-drawer {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            width: 100%;
-            background: var(--card-bg, #1a1a1a);
-            border: 1px solid var(--border, #333);
-            border-top: none;
-            border-radius: 0 0 15px 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 9999;
-            max-height: 350px;
-            overflow-y: auto;
+        .destaque-secao.destacado {
+            animation: destacarArtigo 1.5s ease-in-out; position: relative;
         }
-        #search-suggestions-drawer.active { display: block; }
-        .suggestion-item {
-            padding: 12px 20px;
+        @keyframes destacarArtigo {
+            0% { box-shadow: 0 0 0 0 rgba(229, 9, 20, 0); }
+            25% { box-shadow: 0 0 0 8px rgba(229, 9, 20, 0.15); }
+            100% { box-shadow: 0 0 0 0 rgba(229, 9, 20, 0); }
+        }
+
+        /* AJUSTE DO TOGGLE NO HEADER */
+        .header-actions {
             display: flex;
             align-items: center;
             gap: 12px;
-            cursor: pointer;
-            transition: background 0.2s;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-        .suggestion-item:hover { background: rgba(138, 43, 226, 0.15); }
-        .suggestion-item i { color: var(--tema-cor); width: 20px; text-align: center; }
-        .suggestion-title { font-size: 14px; font-weight: 600; color: var(--text-main, #fff); }
-
-        /* 🛡️ CORREÇÕES DE LAYOUT SPA */
-        .sticky-nav-group {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background: var(--bg);
-            border-bottom: 1px solid var(--border);
         }
 
-        #progress-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 4px;
-            width: 0%;
-            background-color: var(--tema-cor);
-            z-index: 9999;
-            transition: background-color 0.4s ease;
+        .switch-container {
+            display: flex;
+            align-items: center;
+            background: rgba(0,0,0,0.05);
+            padding: 4px 8px;
+            border-radius: 20px;
         }
 
-        #dynamic-content {
-            min-height: 80vh;
-            display: block;
-            overflow: visible; 
-            padding-bottom: 60px; 
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 34px;
+            height: 18px;
         }
-
-        /* LOG VISUAL (DEBUG) */
-        #log-visual-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 10000;
-            pointer-events: none;
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s; border-radius: 18px;
         }
-        .log-entry {
-            background: rgba(0,0,0,0.8);
-            color: #00ff00;
-            padding: 8px 15px;
-            border-radius: 5px;
-            margin-top: 5px;
-            font-family: monospace;
-            font-size: 11px;
-            animation: fadeIn 0.3s forwards;
+        .slider:before {
+            position: absolute; content: "";
+            height: 12px; width: 12px; left: 3px; bottom: 3px;
+            background-color: white; transition: .4s; border-radius: 50%;
         }
+        input:checked + .slider { background-color: var(--primary-color, #e50914); }
+        input:checked + .slider:before { transform: translateX(16px); }
+        
+        .theme-icon { font-size: 12px; margin-right: 5px; color: var(--text-muted); }
     </style>
+
+    <!-- Adsterra Pop-under -->
+  <!-- ===  <script src="https://pl28480241.effectivegatecpm.com/03/fd/7f/03fd7fcc66be850e0b69314ae833f984.js"></script>===== -->
+
 </head>
 
 <body>
 
+<script>
+    (function() {
+        try {
+            const saved = localStorage.getItem('anigeek_persistence_v2');
+            if (saved) {
+                const state = JSON.parse(saved);
+                if (state.newsLoaded) window.noticiasExibidas = state.newsLoaded;
+                if (state.scrollY > 0) {
+                    window.scrollTo(0, state.scrollY);
+                }
+            }
+        } catch (e) {}
+    })();
+</script>
+
 <div id="progress-bar"></div>
-<div id="megaMenuContainer"></div>
 
-<div id="log-visual-container"></div>
+<div class="top-banner-ad"></div>
 
-<div id="toast-copiado" class="toast-aviso">
-    <i class="fa-solid fa-check-circle"></i> Link copiado para a área de transferência!
-</div>
-
-<div class="sticky-nav-group">
+<div class="sticky-header-group">
     <header>
         <div class="nav-container">
-            <a href="./index.html" class="logo">AniGeek<span>News</span></a>
+            <a href="./index.html" class="logo">Anime I Geek</a>
             <ul class="nav-menu">
-                <li class="nav-item"><a href="#" data-section="manchetes">Manchetes</a></li>
-                <li class="nav-item"><a href="#" data-section="analises">Análises</a></li>
-                <li class="nav-item"><a href="#" data-section="tecnologia">Tecnologia</a></li>
-                <li class="nav-item" id="area-usuario"></li> 
+                <li class="nav-item"><a href="#">Animes</a></li>
+                <li class="nav-item"><a href="#">Games</a></li>
+                <li class="nav-item"><a href="#">Mangás</a></li>
+                <li class="nav-item" id="area-usuario"><span>Aguardando...</span></li>
             </ul>
-            
-            <div class="theme-switch-wrapper">
-                <input type="checkbox" id="mobileThemeToggle">
-                <label for="mobileThemeToggle" class="theme-label"><i class="fas fa-moon"></i></label>
+            <div class="header-actions">
+                <div class="switch-container">
+                    <i class="fas fa-moon theme-icon"></i>
+                    <label class="switch">
+                        <input type="checkbox" id="mobileThemeToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <button class="menu-toggle" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
             </div>
-
-            <button class="menu-toggle" onclick="abrirMegaMenu()">
-                <i class="fas fa-bars"></i>
-            </button>
         </div>
     </header>
-
-    <div class="search-bar-wrapper">
-        <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="input-busca-global" placeholder="Pesquisar notícias ou análises..." autocomplete="off">
-        </div>
-        <div id="search-suggestions-drawer"></div>
-    </div>
-    
-    <div class="filter-scroller" id="filterScroller">
-        <div class="loading-shimmer" style="width: 100px; height: 30px;"></div>
-    </div>
+    <div class="filter-scroller" id="filterScroller"></div>
 </div>
 
 <main id="dynamic-content">
-    <div style="text-align:center; padding:100px; color:var(--text-muted);">
-        <i class="fa-solid fa-circle-notch fa-spin"></i> Sincronizando Portal...
-    </div>
+    <section class="hero">
+        <div id="conteudo_de_destaque">
+            <p style="text-align:center;padding-top:100px;color:var(--text-muted)">Sincronizando portal...</p>
+        </div>
+    </section>
 </main>
 
-<script type="module" src="scripts/config-firebase.js"></script>
-<script type="module" src="scripts/auth.js"></script> 
-<script src="scripts/tema.js"></script> <script type="module" src="scripts/modal-manager.js"></script>
-<script type="module" src="scripts/busca.js"></script>
+<div class="mobile-menu" id="mobileMenu">
+    <button class="close-menu" onclick="toggleMobileMenu()">×</button>
+    <div id="container-menu-perfil"></div>
+    <div class="mobile-menu-item"><a href="./index.html">Início</a></div>
+    <div class="mobile-menu-item"><a href="#">Animes</a></div>
+    <div class="mobile-menu-item"><a href="#">Games</a></div>
+    <div class="mobile-menu-item"><a href="#">Mangás</a></div>
+</div>
 
-<script type="module" src="comentarios_de_secao/comentarios_principal.js"></script>
+<script type="module" src="scripts/config-firebase.js"></script>
+<script type="module" src="scripts/tema.js"></script>
 <script type="module" src="scripts/navegacao.js"></script>
-<script src="scripts/customizacao-abas.js"></script> <script type="module">
-    import { inicializarMegaMenu } from './menu/menu.js';
-    inicializarMegaMenu();
+<script src="scripts/recomendacao-secao.js"></script>
+
+<script>
+// FUNÇÃO PARA ABRIR O MENU (Caso não esteja em navegacao.js)
+function toggleMobileMenu() {
+    const menu = document.getElementById('mobileMenu');
+    if(menu) menu.classList.toggle('active');
+}
+
+(function() {
+    const PERSISTENCE_KEYS = {
+        STATE: 'anigeek_persistence_v2',
+        SESSION_TS: 'anigeek_session_ts_v2'
+    };
+    
+    function saveState() {
+        try {
+            const activeTab = document.querySelector('#filterScroller .filter-tag.active');
+            const state = {
+                scrollY: window.scrollY,
+                activeTabId: activeTab ? activeTab.dataset.section : 'manchetes',
+                newsLoaded: window.noticiasExibidas || 5,
+                lastArticleId: window.lastArticleId || null,
+                timestamp: Date.now()
+            };
+            localStorage.setItem(PERSISTENCE_KEYS.STATE, JSON.stringify(state));
+            localStorage.setItem(PERSISTENCE_KEYS.SESSION_TS, Date.now().toString());
+        } catch (e) {}
+    }
+
+    function loadState() {
+        try {
+            const saved = localStorage.getItem(PERSISTENCE_KEYS.STATE);
+            if (!saved) return null;
+            const state = JSON.parse(saved);
+            const ts = parseInt(localStorage.getItem(PERSISTENCE_KEYS.SESSION_TS) || '0');
+            if (Date.now() - ts > 45 * 60 * 1000) return null;
+            return state;
+        } catch (e) { return null; }
+    }
+
+    function restoreState() {
+        const state = loadState();
+        if (!state) return;
+
+        if (state.newsLoaded) window.noticiasExibidas = state.newsLoaded;
+
+        if (state.activeTabId) {
+            const checkTab = setInterval(() => {
+                const tab = document.querySelector(`.filter-tag[data-section="${state.activeTabId}"]`);
+                if (tab) {
+                    clearInterval(checkTab);
+                    if (!tab.classList.contains('active')) tab.click();
+                }
+            }, 100);
+            setTimeout(() => clearInterval(checkTab), 3000);
+        }
+
+        const perseguirArtigo = (attempts = 0) => {
+            const article = state.lastArticleId ? document.getElementById(`artigo-${state.lastArticleId}`) : null;
+            const btnMais = document.getElementById('btn-carregar-mais');
+
+            if (article) {
+                article.scrollIntoView({ behavior: 'instant', block: 'center' });
+                article.classList.add('destacado');
+            } else if (btnMais && btnMais.offsetParent !== null && attempts < 10) {
+                btnMais.click();
+                setTimeout(() => perseguirArtigo(attempts + 1), 600);
+            } else if (state.scrollY > 0) {
+                window.scrollTo({ top: state.scrollY, behavior: 'instant' });
+            }
+        };
+
+        setTimeout(perseguirArtigo, 1500);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        restoreState();
+        setInterval(saveState, 5000);
+        window.addEventListener('scroll', () => {
+            clearTimeout(window.scTimer);
+            window.scTimer = setTimeout(saveState, 500);
+        });
+    });
+
+    window.saveStateGlobal = saveState;
+})();
 </script>
 
+<script>
+window.addEventListener('load', () => {
+    let lastScroll = 0;
+    window.addEventListener('scroll', () => {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrollPercent = (scrollTop / docHeight) * 100;
+        if (Math.abs(scrollTop - lastScroll) > 5) {
+            const pb = document.getElementById('progress-bar');
+            if(pb) pb.style.width = `${scrollPercent}%`;
+            lastScroll = scrollTop;
+        }
+    });
+});
+</script>
 </body>
 </html>

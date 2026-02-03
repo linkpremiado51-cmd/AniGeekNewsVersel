@@ -1,0 +1,327 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AniGeek Studio Enterprise — v14.0 Executive Edition</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@0.343.0/dist/umd/lucide.js"></script>
+    
+    <!-- CSS Imports -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components/modals.css">
+    <link rel="stylesheet" href="css/components/cards.css">
+    <link rel="stylesheet" href="css/components/buttons.css">
+    <link rel="stylesheet" href="css/components/search.css">
+    <link rel="stylesheet" href="css/components/loaders.css">
+</head>
+<body>
+    <!-- Status Message -->
+    <div id="msgStatus" class="status"></div>
+    
+    <!-- Modais -->
+    <div id="dbModal" class="generic-modal" onclick="if(event.target==this) fecharModais()">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i data-lucide="cloud" style="width:18px;height:18px"></i> NUVEM ANIGEEK</h3>
+                <button onclick="fecharModais()">×</button>
+            </div>
+            <div style="padding:14px; background:var(--surface-100); border-bottom:1px solid var(--border)">
+                <input type="text" id="dbSearch" placeholder="Pesquisar..." oninput="filtrarDB()" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:var(--border-radius-md); font-size:13px">
+            </div>
+            <div id="dbList" class="modal-body"></div>
+        </div>
+    </div>
+    
+    <div id="migrationModal" class="generic-modal" onclick="if(event.target==this) fecharModais()">
+        <div class="modal-content" style="border: 2px solid var(--ops);">
+            <div class="modal-header">
+                <h3 style="color: var(--ops);"><i data-lucide="truck" style="width:18px;height:18px"></i> OPERAÇÕES DE DADOS (PRO)</h3>
+                <button onclick="fecharModais()">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="background: rgba(239, 68, 68, 0.08); padding: 12px; border-radius: var(--border-radius-md); color: var(--danger); font-size: 11px; margin-bottom: 16px; border: 1px solid rgba(239, 68, 68, 0.2);">
+                    <i data-lucide="alert-triangle" style="width:16px;height:16px; vertical-align:middle"></i> <b>CUIDADO:</b> Você está prestes a modificar o banco de dados. Verifique os caminhos antes de confirmar.
+                </div>
+                <div class="migration-option">
+                    <label>DOCUMENTO ATUAL (ORIGEM)</label>
+                    <input type="text" id="migracaoOrigem" readonly style="background: var(--surface); font-weight: bold;">
+                </div>
+                <div class="migration-option">
+                    <label>COLEÇÃO DE DESTINO</label>
+                    <select id="migracaoDestinoColecao" style="font-weight: 800; padding:10px; border-radius:var(--border-radius-md); border:1px solid var(--border); width:100%"></select>
+                </div>
+                <div class="migration-option">
+                    <label>ID DO DOCUMENTO (DESTINO)</label>
+                    <input type="text" id="migracaoDestinoID" placeholder="Mantenha igual ou digite novo ID">
+                    <small style="color: var(--text-muted); font-size: 9px; display:block; margin-top:4px;">Deixe em branco para usar o mesmo ID da origem.</small>
+                </div>
+                <div class="ops-btn-group" id="migrationFooter">
+                    <button class="btn-main" style="background: var(--ops); color: white;" onclick="executarMigracao('copiar')">
+                        <i data-lucide="copy" style="width:16px;height:16px"></i> COPIAR / SOBRESCREVER
+                    </button>
+                    <button class="btn-main" style="background: var(--secondary); color: white;" onclick="executarMigracao('mover')">
+                        <i data-lucide="arrow-right-left" style="width:16px;height:16px"></i> MOVER (RECORTAR)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="collectionModal" class="generic-modal" onclick="if(event.target==this) fecharModais()">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i data-lucide="folder-tree" style="width:18px;height:18px"></i> SELECIONAR COLEÇÃO</h3>
+                <button onclick="fecharModais()">×</button>
+            </div>
+            <div class="modal-body" id="listaColecoesBtn"></div>
+        </div>
+    </div>
+    
+    <!-- Header -->
+    <header class="header-enterprise">
+        <h2><i data-lucide="cpu" style="width:18px;height:18px"></i> ANIGEEK AI STUDIO</h2>
+        <span>V14.0 PRO DATA OPS EXECUTIVE</span>
+    </header>
+    
+    <!-- Main Container -->
+    <div class="painel-container">
+        <!-- Configurações Globais de Anúncio -->
+        <div class="secao-card" style="border: 2px solid var(--warning);">
+            <h3><i data-lucide="megaphone" style="width:16px;height:16px; color: var(--warning);"></i> Configurações Globais de Anúncio</h3>
+            <div class="campo-grupo">
+                <label>Link de Redirecionamento PADRÃO (Propaganda do Player)</label>
+                <input type="text" id="globalLinkPropaganda" placeholder="https://www.effectivegatecpm.com/...">
+            </div>
+            <div class="campo-grupo">
+                <label>Script/HTML do Banner Topo PADRÃO</label>
+                <textarea id="globalBannerTopo" style="min-height: 80px;" placeholder="Cole o script ou link do banner padrão aqui"></textarea>
+            </div>
+            <div class="campo-grupo">
+                <label>Script/HTML do Banner Fundo PADRÃO</label>
+                <textarea id="globalBannerFundo" style="min-height: 80px;" placeholder="Cole o script ou link do banner padrão aqui"></textarea>
+            </div>
+            <button class="btn-main btn-sec" style="width: 100%; background: var(--warning); color: #000;" onclick="salvarConfigAds()">
+                <i data-lucide="save" style="width:16px;height:16px"></i> SALVAR CONFIGURAÇÕES GLOBAIS
+            </button>
+        </div>
+        
+        <!-- Busca IA -->
+        <div class="smart-search-area">
+            <div class="search-row">
+                <input type="text" id="animeQuery" placeholder="1. Buscar Anime no MyAnimeList...">
+                <button class="btn-search" onclick="buscarAnime()"><i data-lucide="sparkle" style="width:16px;height:16px"></i></button>
+            </div>
+            <div id="animeResults" class="results-dropdown"></div>
+            <div id="episodeArea" style="display:none; margin-top: 16px; border-top: 1px solid var(--border); padding-top:16px;">
+                <label style="font-size:9px; font-weight:800; color:var(--primary); display:block; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.05em;">2. REFINAR DOCUMENTO</label>
+                <select id="episodeSelect" style="margin-bottom: 14px; width:100%; padding:10px; border:1px solid var(--border); border-radius:var(--border-radius-md); background:var(--surface)"><option value="series_main">Página Principal</option></select>
+                <div class="ai-options" style="display:flex; gap:10px; margin-bottom:14px;">
+                    <div class="ai-chip" onclick="setAiMode('short', this)">Curto</div>
+                    <div class="ai-chip active" onclick="setAiMode('medium', this)">Narrativo</div>
+                    <div class="ai-chip" onclick="setAiMode('long', this)">Completo</div>
+                </div>
+                <button class="btn-search" style="background:var(--success); width: 100%;" onclick="carregarEpisodio()">
+                    <i data-lucide="zap" style="width:16px;height:16px"></i> EXTRAIR COM IA REAL (GEMINI)
+                </button>
+            </div>
+        </div>
+        
+        <!-- Grid Compact -->
+        <div class="grid-compact" style="margin-bottom: 14px;">
+            <div class="campo-grupo">
+                <label>Coleção Ativa</label>
+                <input type="text" id="colecaoDisplay" readonly value="Selecione..." onclick="abrirModalColecao()" style="cursor:pointer; font-weight:800; color:var(--primary);">
+                <input type="hidden" id="colecaoAlvo">
+            </div>
+            <div class="campo-grupo">
+                <label id="ordemLabel">Ordem de Exibição</label>
+                <input type="number" id="ordemNoticia" value="1">
+            </div>
+        </div>
+        
+        <!-- Form Corpo -->
+        <div class="form-corpo">
+            <!-- Analytics -->
+            <div class="secao-card" style="border-left: 5px solid var(--analytics);">
+                <h3><i data-lucide="pie-chart" style="width:16px;height:16px; color: var(--analytics);"></i> Analytics & Monitoramento</h3>
+                <div class="grid-compact">
+                    <div class="campo-grupo">
+                        <label>Visitantes Únicos</label>
+                        <input type="text" id="statsVisitantes" readonly value="0" style="background:var(--surface-100); font-weight:bold; color:var(--analytics);">
+                    </div>
+                    <div class="campo-grupo">
+                        <label>Cliques Player</label>
+                        <input type="text" id="statsPlayer" readonly value="0" style="background:var(--surface-100);">
+                    </div>
+                    <div class="campo-grupo">
+                        <label>Cliques Ads</label>
+                        <input type="text" id="statsAds" readonly value="0" style="background:var(--surface-100);">
+                    </div>
+                </div>
+                <div class="campo-grupo">
+                    <label>Log de Atividade Recente</label>
+                    <div id="logAtividades" style="max-height: 150px; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--border-radius-md); padding: 12px;">
+                        <div style="font-size:10px; color:var(--text-muted); text-align:center;">Selecione um documento para carregar os dados.</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Identidade Digital -->
+            <div class="secao-card">
+                <h3><i data-lucide="fingerprint" style="width:16px;height:16px"></i> Identidade Digital</h3>
+                <div class="campo-grupo">
+                    <label>Título Traduzido</label>
+                    <input type="text" id="titulo" oninput="gerarSlug(this.value)" placeholder="Título do Card">
+                </div>
+                <div class="grid-compact">
+                    <div class="campo-grupo"><label>Slug/ID</label><input type="text" id="docId" readonly style="background:var(--surface-100)"></div>
+                    <div class="campo-grupo">
+                        <label>Hashtags</label>
+                        <input type="text" id="categoria" placeholder="Ação, Drama...">
+                    </div>
+                </div>
+                <div class="campo-grupo">
+                    <label>Cor Identidade</label>
+                    <input type="color" id="cor" value="#4f46e5" style="height:42px; padding:4px; border-radius:var(--border-radius-md);" oninput="atualizarCoresPainel()">
+                </div>
+            </div>
+            
+            <!-- Anúncios Exclusivos -->
+            <div class="secao-card" style="border-left: 5px solid var(--accent);">
+                <h3><i data-lucide="rectangle-ad" style="width:16px;height:16px; color: var(--accent);"></i> Anúncios Exclusivos</h3>
+                <div class="campo-grupo">
+                    <label>Link Propaganda Exclusivo</label>
+                    <input type="text" id="linkPropagandaArtigo" placeholder="Deixe em branco para usar o Global">
+                </div>
+                <div class="campo-grupo">
+                    <label>Script/HTML Banner Exclusivo</label>
+                    <textarea id="bannerAd" style="min-height: 80px;" placeholder="Script ou imagem que aparecerá apenas neste artigo"></textarea>
+                </div>
+            </div>
+            
+            <!-- Ativos de Mídia -->
+            <div class="secao-card">
+                <h3><i data-lucide="photo-film" style="width:16px;height:16px"></i> Ativos de Mídia</h3>
+                <div class="campo-grupo">
+                    <label>Thumbnail Card (16:9)</label>
+                    <input type="text" id="capaNoticia">
+                    <button class="btn-inspect" onclick="inspectMedia('capaNoticia')"><i data-lucide="eye" style="width:14px;height:14px"></i></button>
+                    <div id="viewer-capaNoticia" class="inspect-viewer"></div>
+                </div>
+                <div class="grid-compact">
+                    <div class="campo-grupo">
+                        <label>Banner HD Hero</label>
+                        <input type="text" id="capaUrl">
+                        <button class="btn-inspect" onclick="inspectMedia('capaUrl')"><i data-lucide="image" style="width:14px;height:14px"></i></button>
+                        <div id="viewer-capaUrl" class="inspect-viewer"></div>
+                    </div>
+                    <div class="campo-grupo"><label>Texto Banner</label><input type="text" id="capaDesc"></div>
+                </div>
+                <div class="campo-grupo">
+                    <label>ID YouTube ou Link Drive</label>
+                    <input type="text" id="videoPrincipal" placeholder="Ex: dQw4w9WgXcQ ou link do Drive">
+                    <button class="btn-inspect" onclick="inspectMedia('videoPrincipal')"><i data-lucide="play" style="width:14px;height:14px"></i></button>
+                    <div id="viewer-videoPrincipal" class="inspect-viewer"></div>
+                </div>
+            </div>
+            
+            <!-- Redação Inteligente -->
+            <div class="secao-card">
+                <h3><i data-lucide="pen-tool" style="width:16px;height:16px"></i> Redação Inteligente</h3>
+                <button class="toggle-btn" onclick="rephraseContent()"><i data-lucide="wand-sparkles" style="width:12px;height:12px"></i> IA REESCREVER</button>
+                <div class="campo-grupo">
+                    <label>Conteúdo da Notícia/Review</label>
+                    <textarea id="resumo" style="min-height: 220px;" oninput="contarCaracteres()"></textarea>
+                    <div class="char-counter" id="charCounter">1000 caracteres restantes</div>
+                </div>
+                <div class="campo-grupo">
+                    <label>Fonte de Referência (Link)</label>
+                    <input type="text" id="linkArtigo" placeholder="https://...">
+                </div>
+            </div>
+            
+            <!-- Ficha Técnica -->
+            <div class="secao-card">
+                <h3><i data-lucide="list-check" style="width:16px;height:16px"></i> Ficha Técnica</h3>
+                <div id="container-ficha"></div>
+                <button class="btn-add" onclick="adicionarFicha()">+ Adicionar Atributo</button>
+            </div>
+            
+            <!-- Grid Compact 2 -->
+            <div class="grid-compact">
+                <div class="secao-card">
+                    <h3><i data-lucide="user-cog" style="width:16px;height:16px"></i> Editor</h3>
+                    <div class="campo-grupo"><label>Avatar</label><input type="text" id="perfilImg"></div>
+                    <div id="container-ficha-editor"></div>
+                    <button class="btn-add" onclick="adicionarFichaEditor()">+ Cargo</button>
+                </div>
+                <div class="secao-card">
+                    <h3><i data-lucide="trending-up" style="width:16px;height:16px"></i> Métricas</h3>
+                    <div class="campo-grupo"><label>Likes</label><input type="number" id="curtidas" value="0"></div>
+                    <div class="campo-grupo"><label>Views</label><input type="number" id="visualizacoes" value="0"></div>
+                </div>
+            </div>
+            
+            <!-- Vídeos Vinculados -->
+            <div class="secao-card">
+                <h3><i data-lucide="youtube" style="width:16px;height:16px"></i> Vídeos Vinculados</h3>
+                <div id="container-relacionados"></div>
+                <button class="btn-add" onclick="adicionarRelacionado()">+ Vincular Vídeo</button>
+            </div>
+            
+            <!-- Vitrine de Produtos -->
+            <div class="secao-card">
+                <h3><i data-lucide="shopping-cart" style="width:16px;height:16px"></i> Vitrine de Produtos</h3>
+                <div id="container-produtos"></div>
+                <button class="btn-add" onclick="adicionarProduto()">+ Adicionar Produto</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ações Fixas -->
+    <div class="acoes-wrapper">
+        <div id="ai-loader-inline">
+            <div class="dot-pulse"></div>
+            <div class="dot-pulse"></div>
+            <div class="dot-pulse"></div>
+            <span id="loader-text-inline">IA PROCESSANDO...</span>
+        </div>
+        <div class="acoes">
+            <button class="btn-main btn-delete" onclick="deletarDocumento()"><i data-lucide="trash-2" style="width:16px;height:16px"></i></button>
+            <button class="btn-main btn-ops" onclick="prepararMigracao()"><i data-lucide="truck" style="width:16px;height:16px"></i> MIGRAR</button>
+            <button class="btn-main btn-sec" onclick="toggleCloud()"><i data-lucide="database" style="width:16px;height:16px"></i> BANCO</button>
+            <button class="btn-main btn-save" onclick="salvarGeral()"><i data-lucide="cloud-upload" style="width:16px;height:16px"></i> PUBLICAR</button>
+            <button class="btn-search" onclick="buscarAnime()"><i data-lucide="sparkle" style="width:16px;height:16px"></i></button>
+            <button class="btn-main" style="background: var(--ops); color: white; min-width: 40px;" onclick="prepararMigracaoMassa()" title="Migração em Massa">
+                <i data-lucide="layers" style="width:16px;height:16px"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- JS Imports -->
+    <script type="module" src="js/config/firebase.js"></script>
+    <script type="module" src="js/data/collections-map.js"></script>
+    <script type="module" src="js/core/utils.js"></script>
+    <script type="module" src="js/core/storage.js"></script>
+    <script type="module" src="js/core/validation.js"></script>
+    <script type="module" src="js/ui/modals.js"></script>
+    <script type="module" src="js/ui/collections.js"></script>
+    <script type="module" src="js/ui/media.js"></script>
+    <script type="module" src="js/ui/status.js"></script>
+    <script type="module" src="js/api/mal.js"></script>
+    <script type="module" src="js/api/gemini.js"></script>
+    <script type="module" src="js/data/form-data.js"></script>
+    <script type="module" src="js/data/analytics.js"></script>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
